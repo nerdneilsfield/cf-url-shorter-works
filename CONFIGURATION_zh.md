@@ -7,6 +7,7 @@
 ## 概览
 
 URL 短链接服务需要在两个地方进行配置：
+
 1. **wrangler.toml** - Cloudflare Workers 配置（路由、绑定、环境变量）
 2. **Wrangler Secrets** - 管理员 token（加密存储）
 
@@ -85,6 +86,7 @@ DOMAIN = "short.example.com"
 ```
 
 **DNS 配置：**
+
 - 类型：A
 - 名称：`short`
 - IPv4：`192.0.2.1`（虚拟 IP）
@@ -102,6 +104,7 @@ DOMAIN = "yourdomain.com"
 ```
 
 **DNS 配置：**
+
 - 类型：A
 - 名称：`@`
 - IPv4：`192.0.2.1`
@@ -122,6 +125,7 @@ wrangler dev --local
 ```
 
 `.dev.vars` 中的本地凭据：
+
 ```env
 ADMIN_USER=admin
 ADMIN_PASS=local_password
@@ -154,6 +158,7 @@ id = "YOUR_STAGING_KV_ID"
 ```
 
 **部署到预发布环境：**
+
 ```bash
 wrangler deploy --env staging
 ```
@@ -181,6 +186,7 @@ id = "YOUR_PROD_KV_ID"
 ```
 
 **部署到生产环境：**
+
 ```bash
 wrangler deploy --env production
 ```
@@ -259,6 +265,7 @@ ADMIN_PASS=dev_password
 ```
 
 ⚠️ **重要提示：**
+
 - `.dev.vars` 已在 `.gitignore` 中
 - 仅用于 `wrangler dev --local`
 - 生产环境使用 `wrangler secret`
@@ -268,6 +275,7 @@ ADMIN_PASS=dev_password
 配置完成后，验证以下各项：
 
 ### 配置
+
 - [ ] 已从模板创建 `wrangler.toml`
 - [ ] 在 `routes` 和 `DOMAIN` 变量中配置了域名
 - [ ] 已创建 D1 数据库并添加 ID
@@ -275,21 +283,25 @@ ADMIN_PASS=dev_password
 - [ ] 已配置定时任务触发器
 
 ### DNS
+
 - [ ] 域名已添加到 Cloudflare
 - [ ] DNS 记录已配置
 - [ ] 代理已启用（橙色云）
 - [ ] DNS 传播完成：`dig YOUR_DOMAIN`
 
 ### 密钥
+
 - [ ] 通过 `wrangler secret` 设置管理员 token
 - [ ] 已配置本地 `.dev.vars`（可选）
 
 ### 部署
+
 - [ ] 已应用迁移：`wrangler d1 migrations apply`
 - [ ] 已部署 Worker：`wrangler deploy`
 - [ ] 健康检查正常：`curl https://YOUR_DOMAIN/health`
 
 ### 功能
+
 - [ ] 管理界面可访问：`https://YOUR_DOMAIN/admin`
 - [ ] 可以使用 token 登录
 - [ ] 可以创建链接
@@ -301,10 +313,12 @@ ADMIN_PASS=dev_password
 ### 问题：Workers 路由不匹配
 
 **症状：**
+
 - 访问域名返回 Cloudflare 错误
 - Worker 未拦截请求
 
 **解决方案：**
+
 1. 验证域名已添加到 Cloudflare
 2. 检查 DNS 传播：`dig YOUR_DOMAIN` 或 `nslookup YOUR_DOMAIN`
 3. 验证 `wrangler.toml` 中的路由模式包含 `/*`
@@ -314,10 +328,12 @@ ADMIN_PASS=dev_password
 ### 问题：无法访问 /admin/
 
 **症状：**
+
 - 访问 `/admin/` 时出现 404 错误
 - 管理界面无法加载
 
 **解决方案：**
+
 1. 验证 `admin/` 目录存在，包含 `index.html`、`styles.css`、`app.js`
 2. 检查 Worker 部署：`wrangler deploy --dry-run`
 3. 验证 Worker 正在提供静态资源
@@ -326,30 +342,38 @@ ADMIN_PASS=dev_password
 ### 问题：Worker 中 DOMAIN 未定义
 
 **症状：**
+
 - 缓存操作失败
 - 错误提示 `undefined` 域名
 
 **解决方案：**
+
 1. 验证 `wrangler.toml` 中的 `[vars]` 部分：
+
    ```toml
    [vars]
    DOMAIN = "your-actual-domain.com"
    ```
+
 2. 重新部署：`wrangler deploy`
 3. 如果使用 `[env.xxx]`，检查环境特定变量
 
 ### 问题：数据库/KV 未找到
 
 **症状：**
+
 - 关于缺少数据库或 KV 的错误
 - API 调用时出现 500 错误
 
 **解决方案：**
+
 1. 列出资源：
+
    ```bash
    wrangler d1 list
    wrangler kv namespace list
    ```
+
 2. 验证 `wrangler.toml` 中的 ID 与创建的资源匹配
 3. 验证绑定（`DB`、`CACHE_KV`、`ANALYTICS`）正确
 4. 应用迁移：`wrangler d1 migrations apply URL_SHORTENER_DB`
@@ -357,15 +381,19 @@ ADMIN_PASS=dev_password
 ### 问题：401/403 认证错误
 
 **症状：**
+
 - 无法登录管理界面
 - API 返回 401 或 403
 
 **解决方案：**
+
 1. 重新设置密钥：
+
    ```bash
    wrangler secret put ADMIN_USER
    wrangler secret put ADMIN_PASS
    ```
+
 2. 本地开发时，检查 `.dev.vars` 文件
 3. 清除浏览器缓存/Cookie
 4. 尝试不同浏览器/隐身模式
@@ -375,6 +403,7 @@ ADMIN_PASS=dev_password
 ### 可以提交的内容
 
 ✅ **可以提交：**
+
 - `wrangler.example.toml`（带占位符的模板）
 - `.dev.vars.example`（模板）
 - D1 数据库 ID（非敏感）
@@ -382,6 +411,7 @@ ADMIN_PASS=dev_password
 - 公共域名
 
 ❌ **禁止提交：**
+
 - `wrangler.toml`（包含你的域名）
 - `.dev.vars`（包含凭据）
 - 代码中任何位置的 `ADMIN_USER` / `ADMIN_PASS` 值

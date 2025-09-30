@@ -6,6 +6,7 @@
 **Input**: User description: "Build a URL shortener service using Cloudflare Workers (JS) + D1 (SQLite) + KV (cache) for single domain & single administrator, inspired by Kutt's core features but without multi-user/multi-domain support, no complex backend, only admin API."
 
 ## Execution Flow (main)
+
 ```
 1. Parse user description from Input
    → ✓ Feature description provided: Single-domain URL shortener service
@@ -30,6 +31,7 @@
 ---
 
 ## ⚡ Quick Guidelines
+
 - ✅ Focus on WHAT users need and WHY
 - ❌ Avoid HOW to implement (no tech stack, APIs, code structure)
 - 👥 Written for business stakeholders, not developers
@@ -39,6 +41,7 @@
 ## Clarifications
 
 ### Session 2025-10-01
+
 - Q: What is the expected maximum number of active (non-expired) short links the system should support? → A: Up to 1,000 links (personal/small project scale)
 - Q: What is the acceptable time window for cache updates to propagate after a link is modified or deleted? → A: Short delay (5-30 seconds) - brief inconsistency acceptable
 - Q: What are the maximum allowed lengths for target URLs and custom aliases (slugs)? → A: URL: 2,048 chars, Alias: 32 chars
@@ -50,11 +53,13 @@
 ## User Scenarios & Testing *(mandatory)*
 
 ### Primary User Story
+
 As a **content creator or marketer**, I want to create short, memorable links from long URLs so that I can share them easily on social media, track their usage, and manage them over time through a web-based admin interface. As an **end user**, I want shortened links to redirect me quickly and reliably to the intended destination.
 
 ### Acceptance Scenarios
 
 #### Administrator Scenarios
+
 1. **Given** I navigate to the admin page, **When** I enter my API token, **Then** I gain access to the link management interface
 2. **Given** I am logged into the admin page, **When** I validate my API token, **Then** the system confirms whether the token is valid or invalid
 3. **Given** I am logged into the admin page and want to create a custom alias, **When** I check if a slug is available through the interface, **Then** the system indicates whether the slug is available or conflicts with existing links or reserved paths
@@ -69,11 +74,13 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 12. **Given** I am logged into the admin page, **When** I copy a short link or target URL, **Then** the URL is copied to my clipboard and I receive a toast notification confirming the action
 
 #### End User Scenarios
+
 10. **Given** I receive a short link (e.g., yourdomain.com/abc123), **When** I click or visit it, **Then** I am redirected to the target URL quickly
 11. **Given** I visit a short link that has expired, **When** I attempt to access it, **Then** I see an error message indicating the link is no longer valid
 12. **Given** I visit a short link that doesn't exist, **When** I attempt to access it, **Then** I see an error message indicating the link was not found
 
 ### Edge Cases
+
 - What happens when an administrator tries to create a custom alias that already exists through the web interface? The interface must display a clear error message and allow retry with a different alias.
 - What happens when a link receives thousands of concurrent visits? System must maintain fast redirect performance and accurately record visit statistics without blocking.
 - What happens when a link is updated while visitors are actively using it? System must serve the updated target URL with minimal delay.
@@ -88,6 +95,7 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 ### Functional Requirements
 
 #### Link Creation & Management
+
 - **FR-001**: System MUST allow the administrator to check slug availability before creating a link
 - **FR-002**: System MUST reject reserved slugs (api, admin, health, favicon.ico, robots.txt, sitemap.xml) as unavailable
 - **FR-003**: System MUST allow the administrator to create short links with custom aliases (slug)
@@ -101,17 +109,20 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 - **FR-011**: System MUST allow the administrator to list all created links with their visit counts
 
 #### Redirection
+
 - **FR-012**: System MUST redirect visitors from short links to their target URLs using the specified redirect status code
 - **FR-013**: System MUST serve redirects with low latency (target: sub-100ms at 99th percentile for cached requests)
 - **FR-014**: System MUST return a 404 error when visitors access non-existent short links
 - **FR-015**: System MUST return a 404 error when visitors access expired short links (after expiration timestamp)
 
 #### Expiration & Cleanup
+
 - **FR-016**: System MUST automatically mark links as invalid immediately upon reaching their expiration time
 - **FR-017**: System MUST remove expired links and their associated data every 24 hours (daily cleanup schedule)
 - **FR-018**: System MUST remove both primary storage and cache data for expired links during cleanup operations
 
 #### Statistics & Analytics
+
 - **FR-019**: System MUST record visit events for each short link access, including timestamp
 - **FR-020**: System MUST track the number of visits per link (visit count)
 - **FR-021**: System MUST record visitor geographic information (country/region) for analytics
@@ -123,21 +134,25 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 - **FR-027**: System MUST record visit events without blocking or slowing down redirect responses
 
 #### Security & Access Control
+
 - **FR-028**: System MUST authenticate the administrator using Bearer token authentication before allowing access to management operations
 - **FR-029**: System MUST protect all link creation, update, and deletion operations with token authentication
 - **FR-030**: System MUST allow unauthenticated public access to redirect functionality (visiting short links)
 - **FR-031**: System MUST store authentication token securely as environment variable (URL_SHORTER_ADMIN_TOKEN)
 
 #### Performance & Caching
+
 - **FR-032**: System MUST cache frequently accessed links to maintain low redirect latency
 - **FR-033**: System MUST invalidate cached link data when links are updated or deleted
 - **FR-034**: System MUST propagate cache updates within 5-30 seconds after link modifications (brief inconsistency acceptable during this window)
 
 #### System Health
+
 - **FR-035**: System MUST provide a health check endpoint to verify service availability
 - **FR-036**: System MUST enforce maximum length limits: target URLs up to 2,048 characters, custom aliases up to 32 characters
 
 #### Admin Web Interface
+
 - **FR-037**: System MUST provide a static web-based admin interface accessible via a dedicated route (/admin)
 - **FR-038**: Admin interface MUST use token-based authentication (Bearer token) instead of username/password
 - **FR-039**: Admin interface MUST mask the API token display (showing only first 3 and last 3 characters) with toggle visibility option
@@ -186,15 +201,18 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 ---
 
 ## Review & Acceptance Checklist
+
 *GATE: Automated checks run during main() execution*
 
 ### Content Quality
+
 - [x] No implementation details (languages, frameworks, APIs) - Note: User input included technical details, but spec focuses on capabilities
 - [x] Focused on user value and business needs
 - [x] Written for non-technical stakeholders
 - [x] All mandatory sections completed
 
 ### Requirement Completeness
+
 - [ ] No [NEEDS CLARIFICATION] markers remain - ⚠ Three clarifications needed (cache staleness, size limits, mobile support)
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
@@ -204,6 +222,7 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 ---
 
 ## Execution Status
+
 *Updated by main() during processing*
 
 - [x] User description parsed (initial + admin interface addition)

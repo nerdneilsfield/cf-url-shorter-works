@@ -5,6 +5,7 @@
 **Status**: Complete
 
 ## Overview
+
 This document defines the data entities, schemas, relationships, and validation rules for the URL shortener service.
 
 ---
@@ -59,6 +60,7 @@ CREATE INDEX idx_links_created ON links(created_at DESC);
 ### Validation Rules (Application Layer)
 
 #### Slug Validation
+
 ```javascript
 const SLUG_REGEX = /^[a-zA-Z0-9_-]+$/;
 const MIN_SLUG_LENGTH = 1;
@@ -79,6 +81,7 @@ function validateSlug(slug) {
 ```
 
 #### Target URL Validation
+
 ```javascript
 const MAX_TARGET_LENGTH = 2048;
 
@@ -104,6 +107,7 @@ function validateTarget(target) {
 ```
 
 #### Status Validation
+
 ```javascript
 const ALLOWED_STATUSES = [301, 302, 307, 308];
 
@@ -116,6 +120,7 @@ function validateStatus(status) {
 ```
 
 #### Expiration Validation
+
 ```javascript
 function validateExpiresAt(expiresAt) {
   if (expiresAt === null || expiresAt === undefined) {
@@ -146,6 +151,7 @@ function validateExpiresAt(expiresAt) {
 ```
 
 **States**:
+
 - **Created**: Link just inserted into D1, KV cache populated
 - **Active**: Link is live and redirecting visitors
 - **Updated**: Link metadata changed, KV cache refreshed
@@ -153,6 +159,7 @@ function validateExpiresAt(expiresAt) {
 - **Expired**: Link reached expires_at timestamp, returns 404, awaiting cron cleanup
 
 **Transitions**:
+
 - **Create**: `INSERT INTO links (...) VALUES (...)`
 - **Update**: `UPDATE links SET ... WHERE slug = ?`
 - **Delete**: `DELETE FROM links WHERE slug = ?`
@@ -175,6 +182,7 @@ function validateExpiresAt(expiresAt) {
 **Dataset Name**: `edge_shortener_events`
 
 **Event Structure**:
+
 ```javascript
 {
   blobs: [slug, referrer, country, colo, userAgent],
@@ -201,6 +209,7 @@ function validateExpiresAt(expiresAt) {
 ### Aggregation Queries
 
 #### 1. Total Visits (Last 24 Hours)
+
 ```sql
 SELECT blob1 AS slug, COUNT(*) AS visits
 FROM edge_shortener_events
@@ -210,6 +219,7 @@ ORDER BY visits DESC;
 ```
 
 #### 2. Visits by Country
+
 ```sql
 SELECT blob3 AS country, COUNT(*) AS visits
 FROM edge_shortener_events
@@ -221,6 +231,7 @@ LIMIT 10;
 ```
 
 #### 3. Top Referrers
+
 ```sql
 SELECT blob2 AS referrer, COUNT(*) AS visits
 FROM edge_shortener_events
@@ -266,6 +277,7 @@ async function recordVisit(env, ctx, slug, request) {
 **Key**: `L:${slug}` (prefix "L" for "Link")
 
 **Value** (JSON):
+
 ```json
 {
   "target": "https://example.com/long/url",
@@ -275,6 +287,7 @@ async function recordVisit(env, ctx, slug, request) {
 ```
 
 **TTL Settings**:
+
 - `expirationTtl`: Calculated as `expiresAt - now` (auto-removes at expiration)
 - `cacheTtl`: 60-300 seconds (edge cache duration)
 
@@ -283,6 +296,7 @@ async function recordVisit(env, ctx, slug, request) {
 **Key**: `NEG:${slug}` (prefix "NEG" for "Negative")
 
 **Value** (JSON):
+
 ```json
 {
   "notFound": true,
@@ -291,6 +305,7 @@ async function recordVisit(env, ctx, slug, request) {
 ```
 
 **TTL Settings**:
+
 - `expirationTtl`: 60 seconds (short-lived to allow for recreation)
 - `cacheTtl`: 30 seconds
 
@@ -324,12 +339,14 @@ await env.CACHE_KV.delete(`NEG:${slug}`);
 **Cache Key**: Full request URL (e.g., `https://your-domain.com/${slug}`)
 
 **Cached Response**:
+
 - Status: 301/302/307/308
 - Header: `Location: <target>`
 - Header: `Cache-Control: public, max-age=300`
 - Body: (empty or minimal redirect message)
 
 **Cache Operations**:
+
 ```javascript
 const cache = caches.default;
 const cacheKey = new Request(request.url, {method: 'GET'});
@@ -351,11 +368,13 @@ await cache.delete(cacheKey);
 **Entity Relationships**: None (single-entity model)
 
 **Cross-Storage Relationships**:
+
 - D1 Link → KV Cache: slug is cache key prefix
 - D1 Link → WAE VisitEvent: slug is analytics dimension
 - D1 Link → Cache API: slug in request URL path
 
 **Consistency Model**:
+
 - D1 is source of truth
 - KV and Cache API are derivative caches
 - WAE events are append-only (no relationship back to Link)
@@ -365,31 +384,37 @@ await cache.delete(cacheKey);
 ## Data Lifecycle
 
 ### 1. Link Creation
+
 ```
 Admin API POST → Validate → D1 INSERT → KV PUT (L:${slug}) → D1 success
 ```
 
 ### 2. Redirect (Cache Hit)
+
 ```
 GET /:slug → KV GET (L:${slug}) → Cache API GET → Cached Response → WAE write (non-blocking)
 ```
 
 ### 3. Redirect (Cache Miss)
+
 ```
 GET /:slug → KV miss → D1 SELECT → KV PUT → Cache API PUT → Response → WAE write
 ```
 
 ### 4. Link Update
+
 ```
 Admin API PATCH → Validate → D1 UPDATE → KV PUT (overwrite) → Cache API DELETE → D1 success
 ```
 
 ### 5. Link Deletion
+
 ```
 Admin API DELETE → D1 DELETE → KV DELETE → Cache API DELETE → D1 success
 ```
 
 ### 6. Link Expiration
+
 ```
 Redirect at T > expires_at → Return 404 (no cache write)
 Cron (daily) → D1 SELECT expired → D1 DELETE → KV DELETE → Cache API DELETE
@@ -425,6 +450,7 @@ CREATE INDEX IF NOT EXISTS idx_links_created
 ```
 
 **Apply Migration**:
+
 ```bash
 wrangler d1 migrations apply URL_SHORTENER_DB
 ```

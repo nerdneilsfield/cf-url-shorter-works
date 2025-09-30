@@ -31,6 +31,7 @@ cp .dev.vars.example .dev.vars
 ```
 
 **说明**：
+
 - `wrangler.toml` 和 `.dev.vars` 已添加到 `.gitignore`
 - 这些文件包含你的个人配置，**不应提交到 Git**
 - 模板文件 (`wrangler.example.toml` 和 `.dev.vars.example`) 会被提交，供其他人参考
@@ -129,6 +130,7 @@ npm run deploy
 ### Q: 为什么要使用配置模板？
 
 A: 这样可以：
+
 - 保护你的个人配置（域名、密钥、资源 ID）不被提交到 Git
 - 提供标准的配置模板，方便其他人设置自己的实例
 - 符合开源项目的最佳实践
@@ -148,6 +150,7 @@ git push
 ### Q: 本地测试和生产环境有什么区别？
 
 A:
+
 - **本地测试** (`npm run dev`): 使用 `.dev.vars` 中的 token 和本地 D1 数据库
 - **生产环境** (`npm run deploy`): 使用 `wrangler secret` 设置的 token 和云端 D1 数据库
 

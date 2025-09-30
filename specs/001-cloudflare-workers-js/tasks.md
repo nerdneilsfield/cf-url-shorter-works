@@ -5,6 +5,7 @@
 **Prerequisites**: plan.md, research.md, data-model.md, contracts/, quickstart.md
 
 ## Execution Flow (main)
+
 ```
 1. Load plan.md from feature directory
    → ✓ Tech stack: JavaScript (ES2022+), Cloudflare Workers
@@ -33,6 +34,7 @@
 ---
 
 ## Format: `[ID] [P?] Description`
+
 - **[P]**: Can run in parallel (different files, no dependencies)
 - File paths are absolute from repository root
 - All tests must be written before implementation where marked
@@ -456,6 +458,7 @@
 **Phase Order**: 3.1 → 3.2 → 3.3 → 3.4 → 3.5 → 3.6
 
 **Key Blockers**:
+
 - T002, T003 (Setup) must complete before any tests
 - T004-T017 (Tests) must complete before T018-T036 (Implementation)
 - T018-T020 (Models/Utils) block T021-T024 (Services)
@@ -467,6 +470,7 @@
 - All implementation before T041-T043 (Polish)
 
 **Parallel Opportunities**:
+
 - Within T004-T017: All test files are independent [P]
 - Within T018-T024: All models/utils/services are independent [P]
 - T025-T026: Middleware files are independent [P]
@@ -478,6 +482,7 @@
 ## Parallel Execution Examples
 
 ### Example 1: Contract Tests (T004-T011)
+
 Launch all contract tests simultaneously since they're in separate files:
 
 ```bash
@@ -494,6 +499,7 @@ wait
 ```
 
 ### Example 2: Models and Utilities (T018-T020)
+
 ```bash
 # Independent files, can be implemented in parallel
 # Task T018: worker/src/models/link.js
@@ -502,6 +508,7 @@ wait
 ```
 
 ### Example 3: Services Layer (T021-T024)
+
 ```bash
 # Independent files, can be implemented in parallel
 # Task T021: worker/src/services/links.js
@@ -511,6 +518,7 @@ wait
 ```
 
 ### Example 4: Admin UI (T038-T040)
+
 ```bash
 # Independent files, can be implemented in parallel
 # Task T038: admin/index.html
@@ -546,6 +554,7 @@ wait
 - **Admin UI**: Can be developed in parallel with worker if contracts are stable
 
 **Constitution Compliance (v1.1.0)**:
+
 - **Cache API**: Always use `env.DOMAIN` for cache keys (avoid DNS lookups)
 - **D1 Queries**: Parameterized queries only (prepare/bind pattern)
 - **Performance**: <50ms CPU time, <1MB bundle, monitor with wrangler tail

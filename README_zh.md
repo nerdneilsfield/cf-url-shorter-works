@@ -210,11 +210,11 @@ cp .dev.vars.example .dev.vars
 
 本项目遵循 [Constitution v1.1.0](./.specify/memory/constitution.md) 定义的严格架构原则:
 
-✅ **测试优先开发** - 实现前先编写测试的 TDD 方法
-✅ **平台原生模式** - 直接使用 Cloudflare API，无 ORM 或抽象层
-✅ **简洁与 YAGNI** - 最少依赖，vanilla JS 管理界面
-✅ **性能与可观测性** - <50ms CPU 时间，wrangler 监控工具
-✅ **开源友好** - 可配置域名，无硬编码凭据
+- ✅ **测试优先开发** - 实现前先编写测试的 TDD 方法
+- ✅ **平台原生模式** - 直接使用 Cloudflare API，无 ORM 或抽象层
+- ✅ **简洁与 YAGNI** - 最少依赖，vanilla JS 管理界面
+- ✅ **性能与可观测性** - <50ms CPU 时间，wrangler 监控工具
+- ✅ **开源友好** - 可配置域名，无硬编码凭据
 
 ## 文档
 

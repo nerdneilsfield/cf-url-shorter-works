@@ -10,6 +10,7 @@ A fast, edge-compute URL shortener built with Cloudflare Workers, D1 (SQLite), K
 [English](./README.md) | [中文文档](./README_zh.md)
 
 📖 **Quick Links:**
+
 - [English Setup Guide](./SETUP.md)
 - [中文设置指南](./SETUP_zh.md)
 
@@ -27,6 +28,7 @@ A fast, edge-compute URL shortener built with Cloudflare Workers, D1 (SQLite), K
 ## Architecture
 
 **Edge-first with multi-tier caching:**
+
 - **D1 (SQLite)**: Source of truth for link data
 - **Workers KV**: Global cache with 5-30s staleness tolerance
 - **Cache API**: Per-PoP response caching for sub-10ms redirects
@@ -83,6 +85,7 @@ See [SETUP.md](./SETUP.md) for complete step-by-step instructions.
 ### Create Short Link
 
 **Via Admin UI:**
+
 1. Visit `https://YOUR_DOMAIN/admin`
 2. Enter your API token
 3. Fill out the "Create Short Link" form
@@ -157,6 +160,7 @@ This project uses example configuration files that you must copy and customize:
 | `.dev.vars.example` | `.dev.vars` | Local development secrets | ❌ No |
 
 **Setup:**
+
 ```bash
 cp wrangler.example.toml wrangler.toml
 cp .dev.vars.example .dev.vars
@@ -206,11 +210,11 @@ cp .dev.vars.example .dev.vars
 
 This project follows strict architectural principles defined in [Constitution v1.1.0](./.specify/memory/constitution.md):
 
-✅ **Test-First Development** - TDD approach with tests before implementation
-✅ **Platform-Native Patterns** - Direct Cloudflare APIs, no ORMs or abstractions
-✅ **Simplicity & YAGNI** - Minimal dependencies, vanilla JS admin UI
-✅ **Performance & Observability** - <50ms CPU time, wrangler monitoring tools
-✅ **Open-Source Friendly** - Configurable domain, no hardcoded credentials
+- ✅ **Test-First Development** - TDD approach with tests before implementation
+- ✅ **Platform-Native Patterns** - Direct Cloudflare APIs, no ORMs or abstractions
+- ✅ **Simplicity & YAGNI** - Minimal dependencies, vanilla JS admin UI
+- ✅ **Performance & Observability** - <50ms CPU time, wrangler monitoring tools
+- ✅ **Open-Source Friendly** - Configurable domain, no hardcoded credentials
 
 ## Documentation
 

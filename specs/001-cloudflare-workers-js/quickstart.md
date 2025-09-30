@@ -9,9 +9,11 @@
 ## Prerequisites
 
 ### Required Tools
+
 - **Node.js**: v18+ (LTS recommended)
 - **npm**: v9+ or **pnpm**: v8+
 - **Wrangler CLI**: Latest version
+
   ```bash
   npm install -g wrangler
   # or
@@ -19,13 +21,15 @@
   ```
 
 ### Cloudflare Account Setup
-1. **Cloudflare Account**: Sign up at https://dash.cloudflare.com
+
+1. **Cloudflare Account**: Sign up at <https://dash.cloudflare.com>
 2. **API Token**: Generate with permissions:
    - Workers Scripts:Edit
    - D1:Edit
    - Workers KV:Edit
    - Account Analytics:Read
 3. **Authenticate Wrangler**:
+
    ```bash
    wrangler login
    ```
@@ -230,6 +234,7 @@ curl http://localhost:8787/api/admin/links/test123 \
 ```
 
 **Acceptance Criteria**:
+
 - ✅ Link created successfully (201)
 - ✅ Redirect works (302 with correct Location header)
 - ✅ KV cache populated (subsequent requests <5ms)
@@ -255,6 +260,7 @@ curl -X POST http://localhost:8787/api/admin/links \
 ```
 
 **Acceptance Criteria**:
+
 - ✅ Random slug generated (8-10 characters, alphanumeric)
 - ✅ Slug is unique (no collision with existing links)
 - ✅ Redirect works with generated slug
@@ -286,6 +292,7 @@ curl -i http://localhost:8787/expired
 ```
 
 **Acceptance Criteria**:
+
 - ✅ Expired link returns 404
 - ✅ No KV cache entry created for expired link
 - ✅ Cron cleanup removes expired link from D1
@@ -325,6 +332,7 @@ curl -i http://localhost:8787/update-test
 ```
 
 **Acceptance Criteria**:
+
 - ✅ Link updated in D1
 - ✅ KV cache overwritten
 - ✅ Cache API entry deleted
@@ -358,6 +366,7 @@ curl -i http://localhost:8787/delete-test
 ```
 
 **Acceptance Criteria**:
+
 - ✅ Link deleted from D1
 - ✅ KV cache entry deleted
 - ✅ Cache API entry deleted
@@ -408,6 +417,7 @@ curl -X POST http://localhost:8787/api/admin/links \
 ```
 
 **Acceptance Criteria**:
+
 - ✅ Invalid URLs rejected (400)
 - ✅ Invalid slugs rejected (400)
 - ✅ Duplicate slugs rejected (409)
@@ -428,6 +438,7 @@ wrangler dev --local
 ```
 
 **Manual Test Steps**:
+
 1. **Login**:
    - Enter admin credentials
    - ✅ Successful login shows link list
@@ -493,7 +504,7 @@ curl -i https://${YOUR_DOMAIN}/prod-test
 
 ### Monitor Production
 
-- **Workers Dashboard**: https://dash.cloudflare.com
+- **Workers Dashboard**: <https://dash.cloudflare.com>
 - **D1 Database**: Monitor query performance and storage
 - **KV Metrics**: Check read/write rates
 - **Analytics Engine**: Query visit events via SQL API
@@ -517,6 +528,7 @@ hyperfine --warmup 3 --runs 100 'curl -s -o /dev/null -w "%{time_total}" http://
 ### Cache Hit Rate
 
 Monitor in Wrangler logs or Cloudflare dashboard:
+
 - **Target**: >90% cache hit rate (KV + Cache API)
 - **Cold starts**: <10% of requests hit D1
 
@@ -527,18 +539,22 @@ Monitor in Wrangler logs or Cloudflare dashboard:
 ### Common Issues
 
 **Issue**: 401 Unauthorized on Admin API
+
 - **Cause**: Missing or incorrect basic auth credentials
 - **Fix**: Verify `ADMIN_USER` and `ADMIN_PASS` secrets are set correctly
 
 **Issue**: 404 on all redirects
+
 - **Cause**: D1 migrations not applied
 - **Fix**: Run `wrangler d1 migrations apply URL_SHORTENER_DB --remote`
 
 **Issue**: Slow redirects (>100ms)
+
 - **Cause**: KV cache misses, hitting D1 every time
 - **Fix**: Check KV binding configuration, verify cacheTtl is set
 
 **Issue**: Cron not running
+
 - **Cause**: Cron triggers require paid Workers plan
 - **Fix**: Upgrade to Workers Paid plan or manually trigger cleanup
 

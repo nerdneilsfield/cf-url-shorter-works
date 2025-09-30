@@ -27,6 +27,7 @@ npm install
 ```
 
 This will install:
+
 - `wrangler` - Cloudflare Workers CLI
 - `vitest` - Test framework
 - Other development dependencies
@@ -44,6 +45,7 @@ cp .dev.vars.example .dev.vars
 ```
 
 **Why?**
+
 - `wrangler.toml` and `.dev.vars` contain your personal configuration
 - These files are in `.gitignore` and should **NEVER** be committed
 - Templates (`wrangler.example.toml`, `.dev.vars.example`) are committed for reference
@@ -57,6 +59,7 @@ wrangler d1 create URL_SHORTENER_DB
 ```
 
 **Output example:**
+
 ```
 ✅ Successfully created DB 'URL_SHORTENER_DB'
 
@@ -75,6 +78,7 @@ wrangler kv namespace create CACHE_KV
 ```
 
 **Output example:**
+
 ```
 🌀  Creating namespace with title "url-shortener-CACHE_KV"
 ✨  Success!
@@ -105,6 +109,7 @@ DOMAIN = "short.example.com"
 ```
 
 **Domain Options:**
+
 - Subdomain: `short.example.com`, `s.example.com`, `link.example.com`
 - Apex domain: `yourdomain.com`
 
@@ -173,6 +178,7 @@ wrangler d1 migrations apply URL_SHORTENER_DB
 ```
 
 **Expected output:**
+
 ```
 Migrations to be applied:
 ┌────────────────────────────┐
@@ -194,6 +200,7 @@ wrangler secret put URL_SHORTER_ADMIN_TOKEN
 ```
 
 **Security Notes:**
+
 - These secrets are encrypted and stored in Cloudflare
 - They are separate from `.dev.vars` (local) and `wrangler.toml` (config)
 - You can update them anytime with the same commands
@@ -205,6 +212,7 @@ npm run dev
 ```
 
 **Expected output:**
+
 ```
 ⛅️ wrangler 3.x.x
 -------------------
@@ -232,6 +240,7 @@ npm run deploy
 ```
 
 **Expected output:**
+
 ```
 Total Upload: xx.xx KiB / gzip: xx.xx KiB
 Uploaded url-shortener (x.xx sec)
@@ -250,6 +259,7 @@ curl https://short.example.com/health
 ```
 
 **Expected response:**
+
 ```json
 {"status":"ok","timestamp":1234567890}
 ```
@@ -267,6 +277,7 @@ curl -I https://short.example.com/your-slug
 ```
 
 **Expected response:**
+
 ```
 HTTP/1.1 302 Found
 Location: https://your-target-url.com
@@ -278,6 +289,7 @@ Location: https://your-target-url.com
 ### Issue: "Workers Route not matching"
 
 **Solution:**
+
 - Verify domain is added to Cloudflare
 - Check DNS propagation: `dig short.example.com`
 - Verify route pattern in `wrangler.toml` includes `/*`
@@ -286,6 +298,7 @@ Location: https://your-target-url.com
 ### Issue: "Database not found"
 
 **Solution:**
+
 ```bash
 # List your databases
 wrangler d1 list
@@ -297,6 +310,7 @@ wrangler d1 migrations list URL_SHORTENER_DB
 ### Issue: "401 Unauthorized" in production
 
 **Solution:**
+
 ```bash
 # Re-set secret
 wrangler secret put URL_SHORTER_ADMIN_TOKEN
@@ -305,6 +319,7 @@ wrangler secret put URL_SHORTER_ADMIN_TOKEN
 ### Issue: "Cannot access /admin/"
 
 **Solution:**
+
 - Admin UI files are static, served by the worker
 - Check `admin/` directory exists with `index.html`
 - Verify deployment included all files: `wrangler deploy --dry-run`
@@ -312,6 +327,7 @@ wrangler secret put URL_SHORTER_ADMIN_TOKEN
 ### Issue: "DOMAIN undefined in worker"
 
 **Solution:**
+
 - Verify `[vars]` section in `wrangler.toml`
 - Redeploy: `npm run deploy`
 - Check environment-specific vars if using `[env.xxx]`
@@ -337,6 +353,7 @@ wrangler secret put URL_SHORTER_ADMIN_TOKEN
 ## Advanced Configuration
 
 See [CONFIGURATION.md](./specs/001-cloudflare-workers-js/CONFIGURATION.md) for:
+
 - Environment-specific configurations (staging/production)
 - Custom domain setup
 - Multiple domain support (requires code changes)

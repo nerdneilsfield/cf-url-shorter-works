@@ -7,6 +7,7 @@ This document explains how to configure the URL shortener for your domain and en
 ## Overview
 
 The URL shortener requires configuration in two places:
+
 1. **wrangler.toml** - Cloudflare Workers configuration (routes, bindings, environment variables)
 2. **Wrangler Secrets** - Admin API token (encrypted storage)
 
@@ -84,6 +85,7 @@ DOMAIN = "short.example.com"
 ```
 
 **DNS Configuration:**
+
 - Type: A
 - Name: `short`
 - IPv4: `192.0.2.1` (dummy IP)
@@ -101,6 +103,7 @@ DOMAIN = "yourdomain.com"
 ```
 
 **DNS Configuration:**
+
 - Type: A
 - Name: `@`
 - IPv4: `192.0.2.1`
@@ -121,6 +124,7 @@ wrangler dev --local
 ```
 
 Local credentials in `.dev.vars`:
+
 ```env
 URL_SHORTER_ADMIN_TOKEN=dev-token-12345
 ```
@@ -152,6 +156,7 @@ id = "YOUR_STAGING_KV_ID"
 ```
 
 **Deploy to staging:**
+
 ```bash
 wrangler deploy --env staging
 ```
@@ -179,6 +184,7 @@ id = "YOUR_PROD_KV_ID"
 ```
 
 **Deploy to production:**
+
 ```bash
 wrangler deploy --env production
 ```
@@ -251,6 +257,7 @@ URL_SHORTER_ADMIN_TOKEN=dev-token-12345
 ```
 
 ⚠️ **Important:**
+
 - `.dev.vars` is in `.gitignore`
 - Only for `wrangler dev --local`
 - Production uses `wrangler secret`
@@ -261,6 +268,7 @@ URL_SHORTER_ADMIN_TOKEN=dev-token-12345
 After configuration, verify each item:
 
 ### Configuration
+
 - [ ] `wrangler.toml` created from template
 - [ ] Domain configured in `routes` and `DOMAIN` var
 - [ ] D1 database created and ID added
@@ -268,21 +276,25 @@ After configuration, verify each item:
 - [ ] Cron trigger configured
 
 ### DNS
+
 - [ ] Domain added to Cloudflare
 - [ ] DNS records configured
 - [ ] Proxy enabled (orange cloud)
 - [ ] DNS propagation complete: `dig YOUR_DOMAIN`
 
 ### Secrets
+
 - [ ] Admin token set via `wrangler secret put URL_SHORTER_ADMIN_TOKEN`
 - [ ] Local `.dev.vars` configured (optional)
 
 ### Deployment
+
 - [ ] Migrations applied: `wrangler d1 migrations apply`
 - [ ] Worker deployed: `wrangler deploy`
 - [ ] Health check works: `curl https://YOUR_DOMAIN/health`
 
 ### Functionality
+
 - [ ] Admin UI accessible: `https://YOUR_DOMAIN/admin/`
 - [ ] Can enter API token and validate it
 - [ ] Can create links
@@ -294,10 +306,12 @@ After configuration, verify each item:
 ### Issue: Workers Route Not Matching
 
 **Symptoms:**
+
 - Accessing domain returns Cloudflare error
 - Worker not intercepting requests
 
 **Solutions:**
+
 1. Verify domain is added to Cloudflare
 2. Check DNS propagation: `dig YOUR_DOMAIN` or `nslookup YOUR_DOMAIN`
 3. Verify route pattern in `wrangler.toml` includes `/*`
@@ -307,10 +321,12 @@ After configuration, verify each item:
 ### Issue: Cannot Access /admin/
 
 **Symptoms:**
+
 - 404 error when accessing `/admin/`
 - Admin UI not loading
 
 **Solutions:**
+
 1. Verify `admin/` directory exists with `index.html`, `styles.css`, `app.js`
 2. Check worker deployment: `wrangler deploy --dry-run`
 3. Verify worker is serving static assets
@@ -319,30 +335,38 @@ After configuration, verify each item:
 ### Issue: DOMAIN Undefined in Worker
 
 **Symptoms:**
+
 - Cache operations fail
 - Errors mentioning `undefined` domain
 
 **Solutions:**
+
 1. Verify `[vars]` section in `wrangler.toml`:
+
    ```toml
    [vars]
    DOMAIN = "your-actual-domain.com"
    ```
+
 2. Redeploy: `wrangler deploy`
 3. Check environment-specific vars if using `[env.xxx]`
 
 ### Issue: Database/KV Not Found
 
 **Symptoms:**
+
 - Errors about missing database or KV
 - 500 errors on API calls
 
 **Solutions:**
+
 1. List resources:
+
    ```bash
    wrangler d1 list
    wrangler kv namespace list
    ```
+
 2. Verify IDs in `wrangler.toml` match created resources
 3. Verify bindings (`DB`, `CACHE_KV`, `ANALYTICS`) are correct
 4. Apply migrations: `wrangler d1 migrations apply URL_SHORTENER_DB`
@@ -350,14 +374,18 @@ After configuration, verify each item:
 ### Issue: 401/403 Authentication Errors
 
 **Symptoms:**
+
 - Cannot validate token in admin UI
 - API returns 401 or 403
 
 **Solutions:**
+
 1. Re-set token secret:
+
    ```bash
    wrangler secret put URL_SHORTER_ADMIN_TOKEN
    ```
+
 2. For local dev, check `.dev.vars` file contains correct token
 3. Verify token matches exactly (no extra spaces/newlines)
 4. Clear browser localStorage and re-enter token
@@ -368,6 +396,7 @@ After configuration, verify each item:
 ### What to Commit
 
 ✅ **Safe to commit:**
+
 - `wrangler.example.toml` (template with placeholders)
 - `.dev.vars.example` (template)
 - D1 database IDs (not sensitive)
@@ -375,6 +404,7 @@ After configuration, verify each item:
 - Public domain names
 
 ❌ **Never commit:**
+
 - `wrangler.toml` (contains your domain)
 - `.dev.vars` (contains API token)
 - `URL_SHORTER_ADMIN_TOKEN` value anywhere in code

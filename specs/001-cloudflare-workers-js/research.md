@@ -5,6 +5,7 @@
 **Status**: Complete
 
 ## Overview
+
 This document captures technical research and decisions for implementing a URL shortener service on Cloudflare Workers with D1, KV, Cache API, and Workers Analytics Engine.
 
 ## 1. Cloudflare Workers Architecture
@@ -12,6 +13,7 @@ This document captures technical research and decisions for implementing a URL s
 **Decision**: Edge-first architecture with fetch/scheduled event handlers
 
 **Rationale**:
+
 - Cloudflare Workers execute at 300+ edge locations globally
 - fetch() handler for HTTP requests (redirects, admin API)
 - scheduled() handler for cron-based cleanup (daily)
@@ -19,6 +21,7 @@ This document captures technical research and decisions for implementing a URL s
 - Bindings provide native access to D1, KV, Cache API, WAE
 
 **Implementation Pattern**:
+
 ```javascript
 export default {
   async fetch(request, env, ctx) {
@@ -31,6 +34,7 @@ export default {
 ```
 
 **Alternatives Considered**:
+
 - **Traditional VPS**: Higher latency (single region), requires ops overhead
 - **AWS Lambda/Cloud Functions**: Cold starts, no global edge KV equivalent
 
@@ -43,6 +47,7 @@ export default {
 **Decision**: prepare → bind → run/first pattern for all queries
 
 **Rationale**:
+
 - Official Cloudflare D1 API pattern
 - Prevents SQL injection via parameterized queries
 - `run()` returns array of results (for lists, mutations)
@@ -50,6 +55,7 @@ export default {
 - `all()` available for paginated results
 
 **Implementation Pattern**:
+
 ```javascript
 // Single row lookup
 const link = await env.DB
@@ -71,6 +77,7 @@ const links = await env.DB
 ```
 
 **Alternatives Considered**:
+
 - **ORM (Prisma/Drizzle)**: Adds complexity and bundle size; unnecessary for single table
 - **Raw SQL string concatenation**: Security vulnerability
 
@@ -83,18 +90,21 @@ const links = await env.DB
 **Decision**: Dual-key pattern with expiration controls
 
 **Positive Cache** (`L:${slug}`):
+
 - Stores: `{target, status, expiresAt}` as JSON
 - expirationTtl: Auto-remove when link expires (if expires_at set)
 - cacheTtl: 60-300 seconds (edge cache duration)
 - Written on: Link creation, link update, cache miss from D1
 
 **Negative Cache** (`NEG:${slug}`):
+
 - Stores: `{notFound: true, cached: timestamp}` as JSON
 - expirationTtl: Short TTL (e.g., 60 seconds) to avoid permanent 404s
 - Written on: D1 query returns no result
 - Prevents repeated D1 queries for invalid/deleted slugs
 
 **Rationale**:
+
 - KV is globally replicated (eventual consistency)
 - Positive cache: Fast redirect path (<5ms KV read vs ~20-50ms D1 read)
 - Negative cache: Reduces D1 load from bot/scanner traffic
@@ -102,6 +112,7 @@ const links = await env.DB
 - cacheTtl: Edge cache reduces KV reads further (local PoP cache)
 
 **Implementation Pattern**:
+
 ```javascript
 // Read with cacheTtl
 const cached = await env.CACHE_KV.get(`L:${slug}`, {type: 'json', cacheTtl: 120});
@@ -116,11 +127,13 @@ await env.CACHE_KV.put(`NEG:${slug}`, JSON.stringify({notFound: true}), {expirat
 ```
 
 **Cache Invalidation**:
+
 - On update: Overwrite `L:${slug}` immediately, delete `NEG:${slug}` if exists
 - On delete: Delete `L:${slug}`, optionally write `NEG:${slug}`
 - Propagation: 5-30 seconds (acceptable per clarification)
 
 **Alternatives Considered**:
+
 - **Cache API only**: Not globally replicated (per-PoP only)
 - **No negative caching**: Higher D1 query volume from invalid requests
 
@@ -133,12 +146,14 @@ await env.CACHE_KV.put(`NEG:${slug}`, JSON.stringify({notFound: true}), {expirat
 **Decision**: Cache full HTTP Response objects at PoP level
 
 **Rationale**:
+
 - Cache API stores complete HTTP responses (status, headers, body)
 - Per-PoP cache (not global like KV), reduces Workers CPU for repeated requests at same location
 - Automatic cache-control header respect
 - Manual invalidation via cache.delete(request)
 
 **Implementation Pattern**:
+
 ```javascript
 const cache = caches.default;
 const cacheKey = new Request(request.url, {method: 'GET'});
@@ -158,12 +173,14 @@ return response;
 ```
 
 **Cache Invalidation** (on update/delete):
+
 ```javascript
 const cacheKey = new Request(`https://${DOMAIN}/${slug}`, {method: 'GET'});
 await caches.default.delete(cacheKey);
 ```
 
 **Alternatives Considered**:
+
 - **KV only**: Works, but Cache API optimized for HTTP responses and automatic cache-control handling
 
 **Reference**: [Cache API](https://developers.cloudflare.com/workers/runtime-apis/cache/)
@@ -175,12 +192,14 @@ await caches.default.delete(cacheKey);
 **Decision**: Daily scheduled() handler via Cron Triggers
 
 **Rationale**:
+
 - Clarification confirmed: Every 24 hours (daily)
 - scheduled() handler runs automatically at configured cron schedule
 - Deletes expired links from D1, KV, Cache API
 - wrangler dev --test-scheduled for local testing
 
 **Implementation Pattern**:
+
 ```javascript
 // wrangler.toml
 [triggers]
@@ -211,6 +230,7 @@ async scheduled(event, env, ctx) {
 ```
 
 **Alternatives Considered**:
+
 - **Lazy cleanup on read**: Leaves stale data in storage, slower queries over time
 - **Hourly cron**: Unnecessary overhead for 1K link scale
 
@@ -223,6 +243,7 @@ async scheduled(event, env, ctx) {
 **Decision**: Non-blocking writeDataPoint() for visit events, SQL API for aggregation
 
 **Rationale**:
+
 - writeDataPoint() is async, doesn't block redirect response
 - WAE stores events in time-series database with automatic retention
 - Indexes on blobs (slug, ref, country, colo, ua) enable fast aggregation
@@ -230,6 +251,7 @@ async scheduled(event, env, ctx) {
 - No impact on redirect latency
 
 **Implementation Pattern**:
+
 ```javascript
 // Write event (non-blocking)
 ctx.waitUntil(
@@ -251,6 +273,7 @@ const query = `
 ```
 
 **Alternatives Considered**:
+
 - **D1 for analytics**: Would block redirect path, requires manual aggregation
 - **External analytics (Google Analytics, Plausible)**: Adds external dependency, doesn't leverage edge-native approach
 
@@ -263,12 +286,14 @@ const query = `
 **Decision**: Simple Authorization header check with Wrangler Secrets
 
 **Rationale**:
+
 - Single administrator: No need for user management
 - Wrangler Secrets: ADMIN_USER, ADMIN_PASS (not in code)
 - Base64 decode Authorization header: `Basic base64(username:password)`
 - Timing-safe comparison to prevent timing attacks
 
 **Implementation Pattern**:
+
 ```javascript
 // Middleware
 function requireAuth(request, env) {
@@ -294,12 +319,14 @@ function requireAuth(request, env) {
 ```
 
 **Secrets Management**:
+
 ```bash
 wrangler secret put ADMIN_USER
 wrangler secret put ADMIN_PASS
 ```
 
 **Alternatives Considered**:
+
 - **OAuth/JWT**: Over-engineered for single admin
 - **API keys**: Less secure for human admin (harder to rotate, no password standards)
 
@@ -312,18 +339,21 @@ wrangler secret put ADMIN_PASS
 **Decision**: Vanilla HTML/CSS/JS SPA, served as static assets
 
 **Rationale**:
+
 - Clarification: Mobile support required (≥320px)
 - No build step: Single HTML file with embedded CSS/JS or separate files
 - Communicates with Admin API via fetch()
 - Can be served from worker static assets or separate Cloudflare Pages deployment
 
 **Implementation Approach**:
+
 - Responsive CSS (mobile-first, breakpoints at 768px, 1024px)
 - Vanilla JS (no framework needed for simple CRUD)
 - Client-side validation before API calls
 - LocalStorage for auth state (store Basic Auth credentials)
 
 **Alternatives Considered**:
+
 - **React/Vue SPA**: Requires build step (webpack/vite), unnecessary complexity for simple admin UI
 - **Server-side rendering**: Not needed for single-admin app
 
@@ -336,6 +366,7 @@ wrangler secret put ADMIN_PASS
 **Decision**: Max 2,048 chars for URLs, 32 chars for aliases
 
 **Validation Rules**:
+
 - **Target URL**:
   - Must start with `http://` or `https://`
   - Length: 1-2,048 characters
@@ -348,6 +379,7 @@ wrangler secret put ADMIN_PASS
   - Uniqueness enforced by D1 UNIQUE constraint
 
 **Implementation Pattern**:
+
 ```javascript
 function validateLink({slug, target, status}) {
   const errors = [];
@@ -388,17 +420,20 @@ function validateLink({slug, target, status}) {
 **Decision**: 5-30 second staleness acceptable after updates
 
 **Behavior**:
+
 - When link updated: Immediate KV write, eventual propagation (5-30s)
 - Visitors may see old target URL during propagation window
 - No user notification required (per clarification)
 - Admin UI can show "Changes may take up to 30 seconds to propagate" message
 
 **Mitigation**:
+
 - Short cacheTtl (60-120s) reduces staleness impact
 - Immediate cache.delete() for Cache API removes PoP-level cache
 - KV overwrite triggers replication, but not instant
 
 **Trade-off**: Performance (low latency) vs consistency (immediate updates)
+
 - User accepted brief inconsistency for <100ms redirects
 
 **Reference**: [KV Consistency](https://developers.cloudflare.com/kv/reference/kv-consistency/)
@@ -410,12 +445,14 @@ function validateLink({slug, target, status}) {
 **Decision**: User-configurable domain via environment variable and routes
 
 **Rationale**:
+
 - Project is open-source, no hardcoded domains
 - Domain specified in wrangler.toml routes config
 - Environment variable `DOMAIN` for runtime domain-aware features
 - Supports any custom domain user owns (e.g., short.example.com)
 
 **Implementation Pattern**:
+
 ```toml
 # wrangler.toml
 routes = [
@@ -432,12 +469,14 @@ const fullUrl = `https://${env.DOMAIN}/${slug}`;
 ```
 
 **Configuration Steps**:
+
 1. Add domain to Cloudflare account
 2. Configure DNS (A/CNAME to Workers)
 3. Update wrangler.toml with domain
 4. Deploy worker
 
 **Alternatives Considered**:
+
 - Hardcoded domain: Not suitable for open-source project
 - Request.url parsing: Works but requires environment variable for non-request contexts (cron, admin UI responses)
 
