@@ -63,7 +63,7 @@ wrangler d1 create URL_SHORTENER_DB
 
 ```bash
 # Create KV namespace for cache
-wrangler kv:namespace create CACHE_KV
+wrangler kv namespace create CACHE_KV
 
 # Output will include:
 # id = "xyz789..."

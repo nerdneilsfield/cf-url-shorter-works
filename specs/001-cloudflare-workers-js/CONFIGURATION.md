@@ -40,7 +40,7 @@ database_id = "YOUR_D1_DATABASE_ID"  # From: wrangler d1 create
 # KV Namespace binding
 [[kv_namespaces]]
 binding = "CACHE_KV"
-id = "YOUR_KV_NAMESPACE_ID"  # From: wrangler kv:namespace create
+id = "YOUR_KV_NAMESPACE_ID"  # From: wrangler kv namespace create
 
 # Workers Analytics Engine binding
 [[analytics_engine_datasets]]

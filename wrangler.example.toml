@@ -22,7 +22,7 @@ database_id = "YOUR_D1_DATABASE_ID"  # Get from: wrangler d1 create URL_SHORTENE
 # KV Namespace binding
 [[kv_namespaces]]
 binding = "CACHE_KV"
-id = "YOUR_KV_NAMESPACE_ID"  # Get from: wrangler kv:namespace create CACHE_KV
+id = "YOUR_KV_NAMESPACE_ID"  # Get from: wrangler kv namespace create CACHE_KV
 
 # Workers Analytics Engine binding
 [[analytics_engine_datasets]]

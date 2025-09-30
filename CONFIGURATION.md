@@ -60,7 +60,7 @@ database_id = "YOUR_D1_DATABASE_ID"  # From: wrangler d1 create
 # KV Namespace binding
 [[kv_namespaces]]
 binding = "CACHE_KV"
-id = "YOUR_KV_NAMESPACE_ID"  # From: wrangler kv:namespace create
+id = "YOUR_KV_NAMESPACE_ID"  # From: wrangler kv namespace create
 
 # Workers Analytics Engine binding
 [[analytics_engine_datasets]]
@@ -348,7 +348,7 @@ After configuration, verify each item:
 1. List resources:
    ```bash
    wrangler d1 list
-   wrangler kv:namespace list
+   wrangler kv namespace list
    ```
 2. Verify IDs in `wrangler.toml` match created resources
 3. Verify bindings (`DB`, `CACHE_KV`, `ANALYTICS`) are correct

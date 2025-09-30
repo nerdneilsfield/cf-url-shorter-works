@@ -43,7 +43,7 @@ wrangler d1 create URL_SHORTENER_DB
 # 复制输出中的 database_id
 
 # 创建 KV 命名空间
-wrangler kv:namespace create CACHE_KV
+wrangler kv namespace create CACHE_KV
 # 复制输出中的 namespace ID
 ```
 

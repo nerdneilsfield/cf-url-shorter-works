@@ -60,7 +60,7 @@ database_id = "YOUR_D1_DATABASE_ID"  # 来自：wrangler d1 create
 # KV 命名空间绑定
 [[kv_namespaces]]
 binding = "CACHE_KV"
-id = "YOUR_KV_NAMESPACE_ID"  # 来自：wrangler kv:namespace create
+id = "YOUR_KV_NAMESPACE_ID"  # 来自：wrangler kv namespace create
 
 # Workers Analytics Engine 绑定
 [[analytics_engine_datasets]]
@@ -348,7 +348,7 @@ ADMIN_PASS=dev_password
 1. 列出资源：
    ```bash
    wrangler d1 list
-   wrangler kv:namespace list
+   wrangler kv namespace list
    ```
 2. 验证 `wrangler.toml` 中的 ID 与创建的资源匹配
 3. 验证绑定（`DB`、`CACHE_KV`、`ANALYTICS`）正确

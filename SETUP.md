@@ -71,7 +71,7 @@ database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ### Create KV Namespace
 
 ```bash
-wrangler kv:namespace create CACHE_KV
+wrangler kv namespace create CACHE_KV
 ```
 
 **Output example:**

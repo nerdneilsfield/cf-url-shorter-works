@@ -64,7 +64,7 @@ cp .dev.vars.example .dev.vars
 ```bash
 # 创建 Cloudflare 资源
 wrangler d1 create URL_SHORTENER_DB
-wrangler kv:namespace create CACHE_KV
+wrangler kv namespace create CACHE_KV
 
 # 应用数据库迁移
 wrangler d1 migrations apply URL_SHORTENER_DB
