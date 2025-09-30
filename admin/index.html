@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>URL Shortener - Admin</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Login Form -->
+  <div id="login-screen" class="screen">
+    <div class="container">
+      <h1>URL Shortener Admin</h1>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+        <div id="login-error" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-screen" class="screen hidden">
+    <div class="container">
+      <header>
+        <h1>URL Shortener</h1>
+        <button id="logout-btn" class="btn btn-secondary">Logout</button>
+      </header>
+
+      <!-- Create Link Form -->
+      <section class="create-section">
+        <h2>Create Short Link</h2>
+        <form id="create-form">
+          <div class="form-group">
+            <label for="target-url">Target URL *</label>
+            <input type="url" id="target-url" name="target" placeholder="https://example.com/long/url" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="custom-slug">Custom Slug (optional)</label>
+              <input type="text" id="custom-slug" name="slug" placeholder="my-link" pattern="[a-zA-Z0-9_-]+" maxlength="32">
+              <small>Letters, numbers, hyphens, underscores only (max 32 chars)</small>
+            </div>
+            <div class="form-group">
+              <label for="status-code">Redirect Type</label>
+              <select id="status-code" name="status">
+                <option value="302" selected>302 Temporary</option>
+                <option value="301">301 Permanent</option>
+                <option value="307">307 Temporary (Preserve Method)</option>
+                <option value="308">308 Permanent (Preserve Method)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="expires-at">Expiration (optional)</label>
+            <input type="datetime-local" id="expires-at" name="expiresAt">
+          </div>
+          <button type="submit" class="btn btn-primary">Create Link</button>
+          <div id="create-error" class="error-message"></div>
+          <div id="create-success" class="success-message"></div>
+        </form>
+      </section>
+
+      <!-- Links List -->
+      <section class="links-section">
+        <h2>Short Links</h2>
+        <div id="links-loading" class="loading">Loading links...</div>
+        <div id="links-error" class="error-message"></div>
+        <table id="links-table" class="hidden">
+          <thead>
+            <tr>
+              <th>Slug</th>
+              <th>Target URL</th>
+              <th>Visits</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="links-tbody">
+            <!-- Links will be inserted here -->
+          </tbody>
+        </table>
+        <div id="no-links" class="hidden">
+          <p>No links created yet.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close" id="close-modal">&times;</span>
+      <h2>Edit Link</h2>
+      <form id="edit-form">
+        <input type="hidden" id="edit-slug" name="slug">
+        <div class="form-group">
+          <label for="edit-target">Target URL *</label>
+          <input type="url" id="edit-target" name="target" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-status">Redirect Type</label>
+          <select id="edit-status" name="status">
+            <option value="302">302 Temporary</option>
+            <option value="301">301 Permanent</option>
+            <option value="307">307 Temporary (Preserve Method)</option>
+            <option value="308">308 Permanent (Preserve Method)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-expires">Expiration</label>
+          <input type="datetime-local" id="edit-expires" name="expiresAt">
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>
+        <div id="edit-error" class="error-message"></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

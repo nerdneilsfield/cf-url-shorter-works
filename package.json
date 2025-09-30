@@ -1,0 +1,23 @@
+{
+  "name": "url-shortener",
+  "version": "1.0.0",
+  "description": "Single-domain URL shortener service using Cloudflare Workers",
+  "main": "worker/src/index.js",
+  "scripts": {
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "test": "vitest",
+    "test:scheduled": "wrangler dev --test-scheduled"
+  },
+  "keywords": [
+    "url-shortener",
+    "cloudflare-workers",
+    "edge-compute"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "wrangler": "^3.80.0",
+    "vitest": "^2.1.0"
+  }
+}
