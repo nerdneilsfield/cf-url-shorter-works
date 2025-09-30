@@ -1,0 +1,424 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener Admin API
+  description: Admin management API for URL shortener service (single administrator, HTTP Basic Auth)
+  version: 1.0.0
+  contact:
+    name: Admin API Support
+servers:
+  - url: https://your-domain.com/api/admin
+    description: Production (configure your custom domain)
+
+security:
+  - BasicAuth: []
+
+paths:
+  /links:
+    get:
+      summary: List all short links
+      description: Returns list of all links with metadata, ordered by creation date (newest first)
+      operationId: listLinks
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of links to return
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: List of links
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  links:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Link'
+                  total:
+                    type: integer
+                    description: Total number of links
+                    example: 42
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      summary: Create a new short link
+      description: Creates a new short link with custom or random slug
+      operationId: createLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLinkRequest'
+      responses:
+        '201':
+          description: Link created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: Slug already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Slug 'example' already exists"
+
+  /links/{slug}:
+    parameters:
+      - $ref: '#/components/parameters/SlugPath'
+
+    get:
+      summary: Get link details
+      description: Returns full details and statistics for a specific link
+      operationId: getLink
+      responses:
+        '200':
+          description: Link details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkWithStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      summary: Update a link
+      description: Updates target URL, expiration, or redirect status
+      operationId: updateLink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLinkRequest'
+      responses:
+        '200':
+          description: Link updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete a link
+      description: Permanently deletes a link and invalidates all caches
+      operationId: deleteLink
+      responses:
+        '204':
+          description: Link deleted successfully (no content)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /links/{slug}/stats:
+    parameters:
+      - $ref: '#/components/parameters/SlugPath'
+
+    get:
+      summary: Get link analytics
+      description: Returns visit statistics aggregated from Workers Analytics Engine
+      operationId: getLinkStats
+      parameters:
+        - name: period
+          in: query
+          description: Time period for analytics
+          required: false
+          schema:
+            type: string
+            enum: [24h, 7d, 30d]
+            default: 24h
+      responses:
+        '200':
+          description: Link statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkStats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /health:
+    get:
+      summary: Health check
+      description: Simple health check endpoint (no authentication required)
+      operationId: healthCheck
+      security: []  # Override global security
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: integer
+                    description: Current Unix timestamp
+                    example: 1735603200
+
+components:
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
+      description: HTTP Basic Authentication (username and password from Wrangler Secrets)
+
+  parameters:
+    SlugPath:
+      name: slug
+      in: path
+      required: true
+      description: Short link slug (alias)
+      schema:
+        type: string
+        pattern: '^[a-zA-Z0-9_-]{1,32}$'
+        example: example123
+
+  schemas:
+    Link:
+      type: object
+      required:
+        - id
+        - slug
+        - target
+        - status
+        - visit_count
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+          description: Unique link identifier
+          example: 42
+        slug:
+          type: string
+          description: Short URL slug (alias)
+          pattern: '^[a-zA-Z0-9_-]{1,32}$'
+          minLength: 1
+          maxLength: 32
+          example: example123
+        target:
+          type: string
+          format: uri
+          description: Destination URL
+          minLength: 1
+          maxLength: 2048
+          example: https://example.com/very/long/url
+        status:
+          type: integer
+          description: HTTP redirect status code
+          enum: [301, 302, 307, 308]
+          default: 302
+          example: 302
+        expires_at:
+          type: integer
+          nullable: true
+          description: Unix timestamp when link expires (null = never)
+          example: 1735689600
+        visit_count:
+          type: integer
+          description: Total visit count (cached from analytics)
+          minimum: 0
+          example: 1337
+        created_at:
+          type: integer
+          description: Unix timestamp of creation
+          example: 1735603200
+        updated_at:
+          type: integer
+          description: Unix timestamp of last update
+          example: 1735603200
+
+    LinkWithStats:
+      allOf:
+        - $ref: '#/components/schemas/Link'
+        - type: object
+          properties:
+            stats:
+              $ref: '#/components/schemas/LinkStats'
+
+    LinkStats:
+      type: object
+      required:
+        - total_visits
+        - period
+      properties:
+        total_visits:
+          type: integer
+          description: Total visits in period
+          example: 1337
+        period:
+          type: string
+          description: Time period for stats
+          example: 24h
+        by_country:
+          type: array
+          description: Visits grouped by country
+          items:
+            type: object
+            required:
+              - country
+              - visits
+            properties:
+              country:
+                type: string
+                description: ISO country code
+                example: US
+              visits:
+                type: integer
+                example: 500
+        by_referrer:
+          type: array
+          description: Visits grouped by referrer
+          items:
+            type: object
+            required:
+              - referrer
+              - visits
+            properties:
+              referrer:
+                type: string
+                description: Referrer URL
+                example: https://twitter.com/
+              visits:
+                type: integer
+                example: 250
+
+    CreateLinkRequest:
+      type: object
+      required:
+        - target
+      properties:
+        slug:
+          type: string
+          description: Custom slug (if omitted, random slug generated)
+          pattern: '^[a-zA-Z0-9_-]{1,32}$'
+          minLength: 1
+          maxLength: 32
+          example: my-link
+        target:
+          type: string
+          format: uri
+          description: Destination URL (must be http:// or https://)
+          minLength: 1
+          maxLength: 2048
+          example: https://example.com/page
+        status:
+          type: integer
+          description: HTTP redirect status code
+          enum: [301, 302, 307, 308]
+          default: 302
+          example: 302
+        expires_at:
+          type: integer
+          nullable: true
+          description: Unix timestamp when link expires (null = never)
+          example: 1735689600
+
+    UpdateLinkRequest:
+      type: object
+      properties:
+        target:
+          type: string
+          format: uri
+          description: New destination URL
+          minLength: 1
+          maxLength: 2048
+          example: https://example.com/updated
+        status:
+          type: integer
+          description: New redirect status code
+          enum: [301, 302, 307, 308]
+          example: 301
+        expires_at:
+          type: integer
+          nullable: true
+          description: New expiration timestamp (null = never expires)
+          example: 1735689600
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: Invalid request
+
+  responses:
+    BadRequest:
+      description: Invalid request (validation error)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Validation failed: target URL must be http:// or https://"
+
+    Unauthorized:
+      description: Missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Unauthorized"
+
+    Forbidden:
+      description: Invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Forbidden"
+
+    NotFound:
+      description: Link not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Link not found"

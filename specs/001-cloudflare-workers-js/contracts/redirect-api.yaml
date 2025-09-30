@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener Redirect API
+  description: Public redirect endpoints for URL shortener service (no authentication required)
+  version: 1.0.0
+servers:
+  - url: https://your-domain.com
+    description: Production (configure your custom domain)
+
+paths:
+  /{slug}:
+    get:
+      summary: Redirect to target URL
+      description: |
+        Redirects visitor to the target URL associated with the slug.
+        Returns 404 if slug doesn't exist or link has expired.
+        Records visit event in Workers Analytics Engine (non-blocking).
+      operationId: redirect
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: Short URL slug
+          schema:
+            type: string
+            pattern: '^[a-zA-Z0-9_-]{1,32}$'
+            example: example123
+      responses:
+        '301':
+          description: Permanent redirect (when link status is 301)
+          headers:
+            Location:
+              description: Target URL
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/page
+            Cache-Control:
+              description: Cache control header
+              schema:
+                type: string
+                example: public, max-age=300
+
+        '302':
+          description: Temporary redirect (when link status is 302, default)
+          headers:
+            Location:
+              description: Target URL
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/page
+            Cache-Control:
+              description: Cache control header
+              schema:
+                type: string
+                example: public, max-age=300
+
+        '307':
+          description: Temporary redirect preserving method (when link status is 307)
+          headers:
+            Location:
+              description: Target URL
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/page
+            Cache-Control:
+              description: Cache control header
+              schema:
+                type: string
+                example: public, max-age=300
+
+        '308':
+          description: Permanent redirect preserving method (when link status is 308)
+          headers:
+            Location:
+              description: Target URL
+              schema:
+                type: string
+                format: uri
+                example: https://example.com/page
+            Cache-Control:
+              description: Cache control header
+              schema:
+                type: string
+                example: public, max-age=300
+
+        '404':
+          description: Short link not found or expired
+          content:
+            text/html:
+              schema:
+                type: string
+                example: |
+                  <!DOCTYPE html>
+                  <html>
+                  <head><title>404 Not Found</title></head>
+                  <body>
+                    <h1>404 - Link Not Found</h1>
+                    <p>This short link does not exist or has expired.</p>
+                  </body>
+                  </html>
+
+  /health:
+    get:
+      summary: Health check
+      description: Simple health check endpoint
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: integer
+                    description: Current Unix timestamp
+                    example: 1735603200
+
+components:
+  schemas: {}
