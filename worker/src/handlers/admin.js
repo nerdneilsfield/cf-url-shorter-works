@@ -58,6 +58,32 @@ export async function handleCreateLink(request, env, ctx) {
 }
 
 /**
+ * GET /api/admin/check-slug/:slug - Check if slug is available
+ */
+export async function handleCheckSlug(request, env, ctx, slug) {
+  // Require auth
+  const authError = requireAuth(request, env);
+  if (authError) return authError;
+
+  // Reserved paths
+  const reserved = ['api', 'admin', 'health', 'favicon.ico', 'robots.txt', 'sitemap.xml'];
+  if (reserved.includes(slug.toLowerCase())) {
+    return jsonResponse({ available: false, reason: 'Reserved system path' });
+  }
+
+  // Check if slug exists
+  try {
+    const existing = await getLink(env, slug);
+    if (existing) {
+      return jsonResponse({ available: false, reason: 'Slug already exists' });
+    }
+    return jsonResponse({ available: true });
+  } catch (error) {
+    return jsonResponse({ available: true }); // If not found, it's available
+  }
+}
+
+/**
  * GET /api/admin/links - List all links
  */
 export async function handleListLinks(request, env, ctx) {

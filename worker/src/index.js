@@ -13,7 +13,9 @@ import {
   handleUpdateLink,
   handleDeleteLink,
   handleGetStats,
+  handleCheckSlug,
 } from './handlers/admin.js';
+import { handleAdminUI } from './handlers/static.js';
 import { cleanupExpiredLinks } from './services/cleanup.js';
 
 export default {
@@ -28,14 +30,18 @@ export default {
     try {
       // Parse route
       const { path, method } = parseRoute(request);
+      console.log('[Worker] Request:', { path, method, url: request.url });
       const match = matchRoute(path, method);
 
       if (!match) {
+        console.log('[Worker] No route match for:', { path, method });
         return new Response('Not Found', {
           status: 404,
           headers: { 'Content-Type': 'text/plain' },
         });
       }
+
+      console.log('[Worker] Route matched:', match);
 
       // Route to appropriate handler
       const { handler, params } = match;
@@ -43,6 +49,9 @@ export default {
       switch (handler) {
         case 'health':
           return await handleHealth(request, env, ctx);
+
+        case 'admin.ui':
+          return await handleAdminUI(request, env, ctx, params.path);
 
         case 'redirect':
           return await handleRedirect(request, env, ctx, params.slug);
@@ -52,6 +61,9 @@ export default {
 
         case 'admin.listLinks':
           return await handleListLinks(request, env, ctx);
+
+        case 'admin.checkSlug':
+          return await handleCheckSlug(request, env, ctx, params.slug);
 
         case 'admin.getLink':
           return await handleGetLink(request, env, ctx, params.slug);

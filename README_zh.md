@@ -10,6 +10,7 @@
 [English](./README.md) | [中文文档](./README_zh.md)
 
 📖 **快速链接:**
+
 - [English Setup Guide](./SETUP.md)
 - [中文设置指南](./SETUP_zh.md)
 
@@ -18,7 +19,7 @@
 - ⚡ **快速重定向**: 缓存命中时 p99 延迟 <100ms
 - 🌍 **边缘计算**: 在全球 300+ Cloudflare 数据中心部署
 - 📊 **访问分析**: 按国家和来源追踪访问数据
-- 🔐 **安全管理**: HTTP 基本认证保护管理操作
+- 🔐 **安全管理**: 基于 Token 的认证保护管理操作
 - 📱 **移动友好界面**: 响应式管理界面（支持 ≥320px 屏幕）
 - ⏰ **自动清理**: 每日定时任务删除过期链接
 - 🎯 **自定义别名**: 用户自定义或自动生成别名
@@ -27,6 +28,7 @@
 ## 架构
 
 **边缘优先的多层缓存:**
+
 - **D1 (SQLite)**: 链接数据的真实来源
 - **Workers KV**: 全球缓存，容忍 5-30 秒延迟
 - **Cache API**: 每个 PoP 的响应缓存，实现 <10ms 重定向
@@ -70,8 +72,7 @@ wrangler kv namespace create CACHE_KV
 wrangler d1 migrations apply URL_SHORTENER_DB
 
 # 设置生产环境密钥
-wrangler secret put ADMIN_USER
-wrangler secret put ADMIN_PASS
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
 
 # 部署到生产环境
 npm run deploy
@@ -84,15 +85,16 @@ npm run deploy
 ### 创建短链接
 
 **通过管理界面:**
-1. 访问 `https://YOUR_DOMAIN/admin/`
-2. 使用你的凭据登录
+
+1. 访问 `https://YOUR_DOMAIN/admin`
+2. 输入你的 API token
 3. 填写"创建短链接"表单
 
 **通过 API:**
 
 ```bash
 curl -X POST https://YOUR_DOMAIN/api/admin/links \
-  -u admin:password \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "target": "https://example.com/long/url",
@@ -113,7 +115,7 @@ curl -I https://YOUR_DOMAIN/my-link
 
 ### 管理端点
 
-所有管理端点都需要 HTTP 基本认证。
+所有管理端点都需要 Bearer token 认证。
 
 - `POST /api/admin/links` - 创建链接
 - `GET /api/admin/links` - 列出所有链接
@@ -158,6 +160,7 @@ wrangler deploy --dry-run
 | `.dev.vars.example` | `.dev.vars` | 本地开发密钥 | ❌ 否 |
 
 **设置:**
+
 ```bash
 cp wrangler.example.toml wrangler.toml
 cp .dev.vars.example .dev.vars
@@ -197,7 +200,7 @@ cp .dev.vars.example .dev.vars
 
 ## 安全
 
-- **认证**: 管理端点使用 HTTP 基本认证
+- **认证**: 管理端点使用 Bearer token 认证
 - **输入验证**: 强制执行 URL 格式、别名模式、长度限制
 - **SQL 注入防护**: 仅使用参数化查询（prepare/bind 模式）
 - **不收集 PII**: 分析仅追踪聚合数据

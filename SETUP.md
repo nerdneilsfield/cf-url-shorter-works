@@ -152,9 +152,8 @@ id = "paste-your-namespace-id-here"  # ← Replace this
 For local testing, edit `.dev.vars`:
 
 ```env
-# Local admin credentials (for wrangler dev only)
-ADMIN_USER=admin
-ADMIN_PASS=your_local_password
+# Local admin token (for wrangler dev only)
+URL_SHORTER_ADMIN_TOKEN=your_local_token_min_32_chars
 ```
 
 ⚠️ **Note**: This file is for local development only. Production uses Wrangler Secrets (Step 9).
@@ -189,13 +188,9 @@ Your database may not be available to serve requests during the migration, conti
 ## Step 9: Set Production Secrets
 
 ```bash
-# Set admin username
-wrangler secret put ADMIN_USER
-# When prompted, enter your admin username
-
-# Set admin password
-wrangler secret put ADMIN_PASS
-# When prompted, enter a strong password
+# Set admin token (minimum 32 characters)
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
+# When prompted, enter a secure random token
 ```
 
 **Security Notes:**
@@ -303,9 +298,8 @@ wrangler d1 migrations list URL_SHORTENER_DB
 
 **Solution:**
 ```bash
-# Re-set secrets
-wrangler secret put ADMIN_USER
-wrangler secret put ADMIN_PASS
+# Re-set secret
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
 ```
 
 ### Issue: "Cannot access /admin/"

@@ -4,8 +4,9 @@
   "description": "Single-domain URL shortener service using Cloudflare Workers",
   "main": "worker/src/index.js",
   "scripts": {
-    "dev": "wrangler dev --local",
-    "deploy": "wrangler deploy",
+    "build:static": "node scripts/build-static.js",
+    "dev": "npm run build:static && wrangler dev --local",
+    "deploy": "npm run build:static && wrangler deploy",
     "test": "vitest",
     "test:scheduled": "wrangler dev --test-scheduled"
   },

@@ -3,128 +3,325 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>URL Shortener - Admin</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>URL Shortener - Admin Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="/admin/styles.css">
 </head>
-<body>
-  <!-- Login Form -->
-  <div id="login-screen" class="screen">
-    <div class="container">
-      <h1>URL Shortener Admin</h1>
-      <form id="login-form">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input type="text" id="username" name="username" required>
+<body class="bg-gray-50 min-h-screen">
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-link text-3xl text-blue-600"></i>
+          <h1 class="text-3xl font-bold text-gray-800">URL Shortener</h1>
         </div>
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input type="password" id="password" name="password" required>
+        <div class="text-sm text-gray-500">
+          <i class="fas fa-shield-alt"></i> Admin Dashboard
         </div>
-        <button type="submit" class="btn btn-primary">Login</button>
-        <div id="login-error" class="error-message"></div>
+      </div>
+
+      <!-- Token Input -->
+      <div class="border-t pt-4">
+        <label for="api-token" class="block text-sm font-semibold text-gray-700 mb-2">
+          <i class="fas fa-key mr-2"></i>API Token
+        </label>
+        <div class="flex space-x-2">
+          <input
+            type="password"
+            id="api-token"
+            placeholder="Enter your API token"
+            autocomplete="off"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+          <button
+            type="button"
+            id="toggle-token-visibility"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
+            title="Show/Hide Token"
+          >
+            <i id="visibility-icon" class="fas fa-eye"></i>
+          </button>
+          <button
+            type="button"
+            id="validate-token-btn"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            title="Validate Token"
+          >
+            <i class="fas fa-check-circle mr-1"></i> Validate
+          </button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">
+          <i class="fas fa-info-circle"></i> Token will be saved in browser
+        </p>
+      </div>
+    </div>
+
+    <!-- Create Link Form -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-plus-circle text-blue-600 mr-2"></i> Create Short Link
+      </h2>
+      <form id="create-form" class="space-y-4">
+        <div>
+          <label for="target-url" class="block text-sm font-semibold text-gray-700 mb-2">
+            Target URL <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="url"
+            id="target-url"
+            name="target"
+            placeholder="https://example.com/long/url"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="custom-slug" class="block text-sm font-semibold text-gray-700 mb-2">
+              Custom Slug (optional)
+            </label>
+            <div class="flex space-x-2">
+              <input
+                type="text"
+                id="custom-slug"
+                name="slug"
+                placeholder="my-link"
+                pattern="[a-zA-Z0-9_-]+"
+                maxlength="32"
+                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              >
+              <button
+                type="button"
+                id="check-slug-btn"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
+              >
+                <i class="fas fa-search"></i> Check
+              </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Letters, numbers, hyphens, underscores only (max 32)</p>
+            <div id="slug-check-result" class="mt-1 text-sm font-semibold"></div>
+          </div>
+
+          <div>
+            <label for="status-code" class="block text-sm font-semibold text-gray-700 mb-2">
+              Redirect Type
+            </label>
+            <select
+              id="status-code"
+              name="status"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+              <option value="302" selected>302 Temporary</option>
+              <option value="301">301 Permanent</option>
+              <option value="307">307 Temporary (Preserve Method)</option>
+              <option value="308">308 Permanent (Preserve Method)</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label for="expires-at" class="block text-sm font-semibold text-gray-700 mb-2">
+            Expiration (optional)
+          </label>
+          <input
+            type="datetime-local"
+            id="expires-at"
+            name="expiresAt"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <button
+          type="submit"
+          class="w-full md:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition shadow-md hover:shadow-lg"
+        >
+          <i class="fas fa-plus mr-2"></i> Create Link
+        </button>
       </form>
     </div>
-  </div>
 
-  <!-- Admin Dashboard -->
-  <div id="admin-screen" class="screen hidden">
-    <div class="container">
-      <header>
-        <h1>URL Shortener</h1>
-        <button id="logout-btn" class="btn btn-secondary">Logout</button>
-      </header>
+    <!-- Links List -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+        <i class="fas fa-list text-blue-600 mr-2"></i> Short Links
+      </h2>
 
-      <!-- Create Link Form -->
-      <section class="create-section">
-        <h2>Create Short Link</h2>
-        <form id="create-form">
-          <div class="form-group">
-            <label for="target-url">Target URL *</label>
-            <input type="url" id="target-url" name="target" placeholder="https://example.com/long/url" required>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="custom-slug">Custom Slug (optional)</label>
-              <input type="text" id="custom-slug" name="slug" placeholder="my-link" pattern="[a-zA-Z0-9_-]+" maxlength="32">
-              <small>Letters, numbers, hyphens, underscores only (max 32 chars)</small>
-            </div>
-            <div class="form-group">
-              <label for="status-code">Redirect Type</label>
-              <select id="status-code" name="status">
-                <option value="302" selected>302 Temporary</option>
-                <option value="301">301 Permanent</option>
-                <option value="307">307 Temporary (Preserve Method)</option>
-                <option value="308">308 Permanent (Preserve Method)</option>
-              </select>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="expires-at">Expiration (optional)</label>
-            <input type="datetime-local" id="expires-at" name="expiresAt">
-          </div>
-          <button type="submit" class="btn btn-primary">Create Link</button>
-          <div id="create-error" class="error-message"></div>
-          <div id="create-success" class="success-message"></div>
-        </form>
-      </section>
+      <!-- Search and Refresh Controls -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+        <div class="flex-1 flex space-x-2">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Search by slug or URL..."
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+          <button
+            id="search-btn"
+            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
+          >
+            <i class="fas fa-search mr-1"></i> Search
+          </button>
+        </div>
+        <button
+          id="refresh-btn"
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+        >
+          <i class="fas fa-sync-alt mr-1"></i> Refresh
+        </button>
+      </div>
 
-      <!-- Links List -->
-      <section class="links-section">
-        <h2>Short Links</h2>
-        <div id="links-loading" class="loading">Loading links...</div>
-        <div id="links-error" class="error-message"></div>
-        <table id="links-table" class="hidden">
-          <thead>
+      <!-- Loading State -->
+      <div id="links-loading" class="hidden text-center py-8 text-gray-500">
+        <i class="fas fa-spinner fa-spin text-3xl mb-2"></i>
+        <p>Loading links...</p>
+      </div>
+
+      <!-- Links Table -->
+      <div id="links-table" class="hidden overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 border-b-2 border-gray-200">
             <tr>
-              <th>Slug</th>
-              <th>Target URL</th>
-              <th>Visits</th>
-              <th>Created</th>
-              <th>Actions</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Slug</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Target URL</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Visits</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Created</th>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-gray-700">Actions</th>
             </tr>
           </thead>
-          <tbody id="links-tbody">
+          <tbody id="links-tbody" class="divide-y divide-gray-200">
             <!-- Links will be inserted here -->
           </tbody>
         </table>
-        <div id="no-links" class="hidden">
-          <p>No links created yet.</p>
+      </div>
+
+      <!-- Stats and Pagination -->
+      <div id="stats-pagination" class="hidden mt-6 p-4 bg-gray-50 rounded-lg">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+          <!-- Results Info (Always visible) -->
+          <div class="text-sm text-gray-600">
+            Showing <span id="range-start" class="font-semibold">1</span> - <span id="range-end" class="font-semibold">10</span> of <span id="total-count" class="font-semibold">0</span> links
+          </div>
+
+          <!-- Pagination Controls (Only when multiple pages) -->
+          <div id="pagination-controls" class="hidden flex items-center gap-4">
+            <button id="prev-page" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+              <i class="fas fa-chevron-left mr-1"></i> Previous
+            </button>
+            <span id="page-info" class="text-gray-700 font-semibold">Page 1 of 1</span>
+            <button id="next-page" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed">
+              Next <i class="fas fa-chevron-right ml-1"></i>
+            </button>
+            <div class="flex items-center space-x-2">
+              <label for="jump-to-page" class="text-sm text-gray-700">Jump:</label>
+              <input
+                type="number"
+                id="jump-to-page"
+                min="1"
+                placeholder="1"
+                class="w-16 px-2 py-1 border border-gray-300 rounded text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+              <button id="jump-btn" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition">
+                Go
+              </button>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
+
+      <!-- No Links Message -->
+      <div id="no-links" class="hidden text-center py-12 text-gray-500">
+        <i class="fas fa-inbox text-5xl mb-4"></i>
+        <p class="text-lg">No links found</p>
+      </div>
     </div>
   </div>
 
   <!-- Edit Modal -->
-  <div id="edit-modal" class="modal hidden">
-    <div class="modal-content">
-      <span class="close" id="close-modal">&times;</span>
-      <h2>Edit Link</h2>
-      <form id="edit-form">
-        <input type="hidden" id="edit-slug" name="slug">
-        <div class="form-group">
-          <label for="edit-target">Target URL *</label>
-          <input type="url" id="edit-target" name="target" required>
+  <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">
+            <i class="fas fa-edit text-blue-600 mr-2"></i> Edit Link
+          </h2>
+          <button id="close-modal" class="text-gray-400 hover:text-gray-600 text-2xl">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
-        <div class="form-group">
-          <label for="edit-status">Redirect Type</label>
-          <select id="edit-status" name="status">
-            <option value="302">302 Temporary</option>
-            <option value="301">301 Permanent</option>
-            <option value="307">307 Temporary (Preserve Method)</option>
-            <option value="308">308 Permanent (Preserve Method)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="edit-expires">Expiration</label>
-          <input type="datetime-local" id="edit-expires" name="expiresAt">
-        </div>
-        <button type="submit" class="btn btn-primary">Save Changes</button>
-        <button type="button" class="btn btn-secondary" id="cancel-edit">Cancel</button>
-        <div id="edit-error" class="error-message"></div>
-      </form>
+
+        <form id="edit-form" class="space-y-4">
+          <input type="hidden" id="edit-slug" name="slug">
+
+          <div>
+            <label for="edit-target" class="block text-sm font-semibold text-gray-700 mb-2">
+              Target URL <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="url"
+              id="edit-target"
+              name="target"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+
+          <div>
+            <label for="edit-status" class="block text-sm font-semibold text-gray-700 mb-2">
+              Redirect Type
+            </label>
+            <select
+              id="edit-status"
+              name="status"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+              <option value="302">302 Temporary</option>
+              <option value="301">301 Permanent</option>
+              <option value="307">307 Temporary (Preserve Method)</option>
+              <option value="308">308 Permanent (Preserve Method)</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="edit-expires" class="block text-sm font-semibold text-gray-700 mb-2">
+              Expiration
+            </label>
+            <input
+              type="datetime-local"
+              id="edit-expires"
+              name="expiresAt"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+
+          <div class="flex space-x-3 pt-4">
+            <button
+              type="submit"
+              class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition"
+            >
+              <i class="fas fa-save mr-2"></i> Save Changes
+            </button>
+            <button
+              type="button"
+              id="cancel-edit"
+              class="flex-1 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-lg transition"
+            >
+              <i class="fas fa-times mr-2"></i> Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <script src="/admin/app.js"></script>
 </body>
 </html>

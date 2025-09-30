@@ -55,15 +55,18 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 ### Acceptance Scenarios
 
 #### Administrator Scenarios
-1. **Given** I navigate to the admin page, **When** I enter my credentials, **Then** I gain access to the link management interface
-2. **Given** I am logged into the admin page and have a long URL, **When** I create a short link with a custom alias through the web interface, **Then** the system generates a short link using my specified alias and the configured domain
-3. **Given** I am logged into the admin page and have a long URL, **When** I create a short link without specifying an alias through the web interface, **Then** the system generates a random, unique alias for the short link
-4. **Given** I am logged into the admin page and have created a short link, **When** I set an expiration date through the web interface, **Then** the link automatically becomes invalid after that date
-5. **Given** I am logged into the admin page, **When** I view the links list, **Then** I see all my links displayed with their visit counts and metadata in a readable format
-6. **Given** I am logged into the admin page and want to modify a short link, **When** I update its target URL or expiration date through the web interface, **Then** the changes take effect immediately
-7. **Given** I am logged into the admin page and no longer need a short link, **When** I delete it through the web interface, **Then** the link is removed and visitors see an error message when attempting to access it
-8. **Given** I am logged into the admin page, **When** I view link statistics through the web interface, **Then** I see recent visit counts, geographic distribution, and referrer information presented visually
-9. **Given** I am logged into the admin page, **When** I copy a short link, **Then** the full short URL (including domain) is copied to my clipboard for easy sharing
+1. **Given** I navigate to the admin page, **When** I enter my API token, **Then** I gain access to the link management interface
+2. **Given** I am logged into the admin page, **When** I validate my API token, **Then** the system confirms whether the token is valid or invalid
+3. **Given** I am logged into the admin page and want to create a custom alias, **When** I check if a slug is available through the interface, **Then** the system indicates whether the slug is available or conflicts with existing links or reserved paths
+4. **Given** I am logged into the admin page and have a long URL, **When** I create a short link with a custom alias through the web interface, **Then** the system generates a short link using my specified alias and the configured domain
+5. **Given** I am logged into the admin page and have a long URL, **When** I create a short link without specifying an alias through the web interface, **Then** the system generates a random, unique alias for the short link
+6. **Given** I am logged into the admin page and have created a short link, **When** I set an expiration date through the web interface, **Then** the link automatically becomes invalid after that date
+7. **Given** I am logged into the admin page, **When** I view the links list with search functionality, **Then** I can filter links by slug or target URL
+8. **Given** I am logged into the admin page, **When** I view the links list with pagination, **Then** I see the current page range (e.g., "Showing 1-10 of 50 links") and can navigate between pages
+9. **Given** I am logged into the admin page and want to modify a short link, **When** I update its target URL or expiration date through the web interface, **Then** the changes take effect immediately and I receive a success notification
+10. **Given** I am logged into the admin page and no longer need a short link, **When** I delete it through the web interface, **Then** the link is removed, I receive a confirmation notification, and visitors see an error message when attempting to access it
+11. **Given** I am logged into the admin page, **When** I view link statistics through the web interface, **Then** I see visit counts displayed as badges
+12. **Given** I am logged into the admin page, **When** I copy a short link or target URL, **Then** the URL is copied to my clipboard and I receive a toast notification confirming the action
 
 #### End User Scenarios
 10. **Given** I receive a short link (e.g., yourdomain.com/abc123), **When** I click or visit it, **Then** I am redirected to the target URL quickly
@@ -85,69 +88,79 @@ As a **content creator or marketer**, I want to create short, memorable links fr
 ### Functional Requirements
 
 #### Link Creation & Management
-- **FR-001**: System MUST allow the administrator to create short links with custom aliases (slug)
-- **FR-002**: System MUST allow the administrator to create short links with randomly generated aliases when no custom alias is provided
-- **FR-003**: System MUST validate that target URLs use HTTP or HTTPS protocols only
-- **FR-004**: System MUST ensure all aliases (slugs) are unique within the domain
-- **FR-005**: System MUST allow the administrator to set optional expiration dates for short links (specified as Unix timestamps)
-- **FR-006**: System MUST allow the administrator to specify redirect type (301 permanent, 302 temporary, 307 temporary with method preservation, or 308 permanent with method preservation), with 302 as default
-- **FR-007**: System MUST allow the administrator to update existing links (target URL, expiration date, redirect type)
-- **FR-008**: System MUST allow the administrator to delete existing links
-- **FR-009**: System MUST allow the administrator to list all created links with their visit counts
+- **FR-001**: System MUST allow the administrator to check slug availability before creating a link
+- **FR-002**: System MUST reject reserved slugs (api, admin, health, favicon.ico, robots.txt, sitemap.xml) as unavailable
+- **FR-003**: System MUST allow the administrator to create short links with custom aliases (slug)
+- **FR-004**: System MUST allow the administrator to create short links with randomly generated aliases when no custom alias is provided
+- **FR-005**: System MUST validate that target URLs use HTTP or HTTPS protocols only
+- **FR-006**: System MUST ensure all aliases (slugs) are unique within the domain
+- **FR-007**: System MUST allow the administrator to set optional expiration dates for short links (specified as Unix timestamps)
+- **FR-008**: System MUST allow the administrator to specify redirect type (301 permanent, 302 temporary, 307 temporary with method preservation, or 308 permanent with method preservation), with 302 as default
+- **FR-009**: System MUST allow the administrator to update existing links (target URL, expiration date, redirect type)
+- **FR-010**: System MUST allow the administrator to delete existing links
+- **FR-011**: System MUST allow the administrator to list all created links with their visit counts
 
 #### Redirection
-- **FR-010**: System MUST redirect visitors from short links to their target URLs using the specified redirect status code
-- **FR-011**: System MUST serve redirects with low latency (target: sub-100ms at 99th percentile for cached requests)
-- **FR-012**: System MUST return a 404 error when visitors access non-existent short links
-- **FR-013**: System MUST return a 404 error when visitors access expired short links (after expiration timestamp)
+- **FR-012**: System MUST redirect visitors from short links to their target URLs using the specified redirect status code
+- **FR-013**: System MUST serve redirects with low latency (target: sub-100ms at 99th percentile for cached requests)
+- **FR-014**: System MUST return a 404 error when visitors access non-existent short links
+- **FR-015**: System MUST return a 404 error when visitors access expired short links (after expiration timestamp)
 
 #### Expiration & Cleanup
-- **FR-014**: System MUST automatically mark links as invalid immediately upon reaching their expiration time
-- **FR-015**: System MUST remove expired links and their associated data every 24 hours (daily cleanup schedule)
-- **FR-016**: System MUST remove both primary storage and cache data for expired links during cleanup operations
+- **FR-016**: System MUST automatically mark links as invalid immediately upon reaching their expiration time
+- **FR-017**: System MUST remove expired links and their associated data every 24 hours (daily cleanup schedule)
+- **FR-018**: System MUST remove both primary storage and cache data for expired links during cleanup operations
 
 #### Statistics & Analytics
-- **FR-017**: System MUST record visit events for each short link access, including timestamp
-- **FR-018**: System MUST track the number of visits per link (visit count)
-- **FR-019**: System MUST record visitor geographic information (country/region) for analytics
-- **FR-020**: System MUST record referrer information when available
-- **FR-021**: System MUST record visitor client information (user agent) for analytics
-- **FR-022**: System MUST aggregate visit data for reporting within recent time windows (e.g., last 24 hours)
-- **FR-023**: System MUST provide analytics aggregated by country/region
-- **FR-024**: System MUST provide analytics aggregated by referrer source
-- **FR-025**: System MUST record visit events without blocking or slowing down redirect responses
+- **FR-019**: System MUST record visit events for each short link access, including timestamp
+- **FR-020**: System MUST track the number of visits per link (visit count)
+- **FR-021**: System MUST record visitor geographic information (country/region) for analytics
+- **FR-022**: System MUST record referrer information when available
+- **FR-023**: System MUST record visitor client information (user agent) for analytics
+- **FR-024**: System MUST aggregate visit data for reporting within recent time windows (e.g., last 24 hours)
+- **FR-025**: System MUST provide analytics aggregated by country/region
+- **FR-026**: System MUST provide analytics aggregated by referrer source
+- **FR-027**: System MUST record visit events without blocking or slowing down redirect responses
 
 #### Security & Access Control
-- **FR-026**: System MUST authenticate the administrator before allowing access to management operations
-- **FR-027**: System MUST protect all link creation, update, and deletion operations with authentication
-- **FR-028**: System MUST allow unauthenticated public access to redirect functionality (visiting short links)
-- **FR-029**: System MUST store authentication credentials securely separate from application code
+- **FR-028**: System MUST authenticate the administrator using Bearer token authentication before allowing access to management operations
+- **FR-029**: System MUST protect all link creation, update, and deletion operations with token authentication
+- **FR-030**: System MUST allow unauthenticated public access to redirect functionality (visiting short links)
+- **FR-031**: System MUST store authentication token securely as environment variable (URL_SHORTER_ADMIN_TOKEN)
 
 #### Performance & Caching
-- **FR-030**: System MUST cache frequently accessed links to maintain low redirect latency
-- **FR-031**: System MUST invalidate cached link data when links are updated or deleted
-- **FR-032**: System MUST propagate cache updates within 5-30 seconds after link modifications (brief inconsistency acceptable during this window)
+- **FR-032**: System MUST cache frequently accessed links to maintain low redirect latency
+- **FR-033**: System MUST invalidate cached link data when links are updated or deleted
+- **FR-034**: System MUST propagate cache updates within 5-30 seconds after link modifications (brief inconsistency acceptable during this window)
 
 #### System Health
-- **FR-033**: System MUST provide a health check endpoint to verify service availability
-- **FR-034**: System MUST enforce maximum length limits: target URLs up to 2,048 characters, custom aliases up to 32 characters
+- **FR-035**: System MUST provide a health check endpoint to verify service availability
+- **FR-036**: System MUST enforce maximum length limits: target URLs up to 2,048 characters, custom aliases up to 32 characters
 
 #### Admin Web Interface
-- **FR-035**: System MUST provide a static web-based admin interface accessible via a dedicated route
-- **FR-036**: Admin interface MUST present a login form requiring credentials before accessing management features
-- **FR-037**: Admin interface MUST display a list of all short links with their key metadata (alias, target URL, visit count, creation date, expiration date)
-- **FR-038**: Admin interface MUST provide a form to create new short links with fields for target URL, optional custom alias, optional expiration date, and optional redirect type
-- **FR-039**: Admin interface MUST allow editing existing links inline or through a modal/form
-- **FR-040**: Admin interface MUST provide a delete action for each link with confirmation to prevent accidental deletion
-- **FR-041**: Admin interface MUST display visit statistics for links including total visits, recent activity (last 24h), geographic breakdown, and top referrers
-- **FR-042**: Admin interface MUST provide a "copy to clipboard" function for generated short URLs
-- **FR-043**: Admin interface MUST display clear error messages when API operations fail (validation errors, network errors, authentication errors)
-- **FR-044**: Admin interface MUST validate user input client-side before submitting to the API (URL format, required fields)
-- **FR-045**: Admin interface MUST work as a single-page application without requiring page reloads for management operations
-- **FR-046**: Admin interface MUST be responsive and usable across all device sizes including mobile phones (minimum screen width: 320px)
-- **FR-047**: Admin interface MUST communicate with the backend exclusively through the Admin API endpoints
-- **FR-048**: Admin interface MUST handle authentication state and prompt for re-login when credentials expire or are invalid
-- **FR-049**: Admin interface MUST be served as static files (HTML/CSS/JavaScript) without server-side rendering requirements
+- **FR-037**: System MUST provide a static web-based admin interface accessible via a dedicated route (/admin)
+- **FR-038**: Admin interface MUST use token-based authentication (Bearer token) instead of username/password
+- **FR-039**: Admin interface MUST mask the API token display (showing only first 3 and last 3 characters) with toggle visibility option
+- **FR-040**: Admin interface MUST provide a token validation button to test if the token is valid
+- **FR-041**: Admin interface MUST provide a slug availability checker to verify if a custom slug is available or reserved
+- **FR-042**: Admin interface MUST display a list of all short links with their key metadata (alias, target URL, visit count, creation date)
+- **FR-043**: Admin interface MUST provide search functionality to filter links by slug or target URL
+- **FR-044**: Admin interface MUST provide pagination controls with page range display (e.g., "Showing 1-10 of 50 links")
+- **FR-045**: Admin interface MUST display pagination controls only when there are more than 10 links
+- **FR-046**: Admin interface MUST provide a form to create new short links with fields for target URL, optional custom alias, optional expiration date, and optional redirect type
+- **FR-047**: Admin interface MUST allow editing existing links through a modal form
+- **FR-048**: Admin interface MUST provide a delete action for each link with browser confirmation to prevent accidental deletion
+- **FR-049**: Admin interface MUST display visit statistics as badges showing total visit counts
+- **FR-050**: Admin interface MUST provide "copy to clipboard" functions for both short URLs and target URLs
+- **FR-051**: Admin interface MUST display toast notifications for all user actions (create, edit, delete, copy, token validation, slug check)
+- **FR-052**: Admin interface MUST use modern UI styling (Tailwind CSS via CDN) with Font Awesome icons
+- **FR-053**: Admin interface MUST display clear error messages when API operations fail (validation errors, network errors, authentication errors)
+- **FR-054**: Admin interface MUST validate user input client-side before submitting to the API (URL format, required fields)
+- **FR-055**: Admin interface MUST work as a single-page application without requiring page reloads for management operations
+- **FR-056**: Admin interface MUST be responsive and usable across all device sizes including mobile phones (minimum screen width: 320px)
+- **FR-057**: Admin interface MUST communicate with the backend exclusively through the Admin API endpoints
+- **FR-058**: Admin interface MUST handle authentication state and show appropriate error messages for invalid tokens
+- **FR-059**: Admin interface MUST be served as static files (HTML/CSS/JavaScript) embedded in the worker code via build script
 
 ### Key Entities *(include if feature involves data)*
 

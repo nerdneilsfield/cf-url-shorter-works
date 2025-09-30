@@ -9,6 +9,8 @@ routes = [
   { pattern = "YOUR_DOMAIN/*", zone_name = "YOUR_DOMAIN" }
 ]
 
+
+
 # Environment variables
 [vars]
 DOMAIN = "YOUR_DOMAIN"

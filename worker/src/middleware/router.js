@@ -27,9 +27,10 @@ export function matchRoute(path, method) {
     return { handler: 'health', params: {} };
   }
 
-  // Admin API routes
+  // Admin API routes (must come before Admin UI to avoid conflict)
   if (path.startsWith('/api/admin/')) {
-    const adminPath = path.slice(11); // Remove '/api/admin'
+    const adminPath = '/' + path.slice(11); // Remove '/api/admin', keep leading slash
+    console.log('[Router] API route:', { path, method, adminPath });
 
     // POST /api/admin/links - Create link
     if (adminPath === '/links' && method === 'POST') {
@@ -39,6 +40,12 @@ export function matchRoute(path, method) {
     // GET /api/admin/links - List links
     if (adminPath === '/links' && method === 'GET') {
       return { handler: 'admin.listLinks', params: {} };
+    }
+
+    // GET /api/admin/check-slug/:slug - Check slug availability
+    const checkSlugMatch = adminPath.match(/^\/check-slug\/([^\/]+)$/);
+    if (checkSlugMatch && method === 'GET') {
+      return { handler: 'admin.checkSlug', params: { slug: checkSlugMatch[1] } };
     }
 
     // GET /api/admin/links/:slug - Get link details
@@ -64,12 +71,17 @@ export function matchRoute(path, method) {
     }
   }
 
+  // Admin UI routes (static files) - after API routes
+  if (path.startsWith('/admin')) {
+    return { handler: 'admin.ui', params: { path } };
+  }
+
   // Redirect route (GET /:slug)
   // Must be last to avoid catching other routes
-  if (method === 'GET' && path.length > 1) {
+  if (method === 'GET' && path.length > 1 && path !== '/') {
     const slug = path.slice(1); // Remove leading '/'
-    // Only match valid slugs (no slashes)
-    if (!slug.includes('/')) {
+    // Only match valid slugs (no slashes, not empty)
+    if (slug && !slug.includes('/')) {
       return { handler: 'redirect', params: { slug } };
     }
   }

@@ -72,11 +72,10 @@ id = "粘贴-namespace-id-这里"
 
 ### 5. 配置本地开发环境（可选）
 
-编辑 `.dev.vars` 文件，设置本地测试用的管理员凭证：
+编辑 `.dev.vars` 文件，设置本地测试用的管理员 token：
 
 ```
-ADMIN_USER=admin
-ADMIN_PASS=your_local_password
+URL_SHORTER_ADMIN_TOKEN=your_local_token_min_32_chars
 ```
 
 这个文件只用于本地开发（`wrangler dev --local`）。
@@ -91,17 +90,14 @@ wrangler d1 migrations apply URL_SHORTENER_DB --local
 wrangler d1 migrations apply URL_SHORTENER_DB
 ```
 
-### 7. 设置生产环境管理员凭证
+### 7. 设置生产环境管理员 token
 
 ```bash
-wrangler secret put ADMIN_USER
-# 输入你的管理员用户名
-
-wrangler secret put ADMIN_PASS
-# 输入一个强密码
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
+# 输入一个安全的随机 token（至少 32 个字符）
 ```
 
-这些凭证会被加密存储在 Cloudflare 中。
+这个密钥会被加密存储在 Cloudflare 中。
 
 ### 8. 本地测试
 
@@ -119,7 +115,7 @@ npm run deploy
 
 ### 10. 访问管理界面
 
-访问 `https://YOUR_DOMAIN/admin/` 并使用你设置的凭证登录。
+访问 `https://YOUR_DOMAIN/admin` 并输入你设置的 token。
 
 ## 配置文件说明
 
@@ -152,8 +148,8 @@ git push
 ### Q: 本地测试和生产环境有什么区别？
 
 A:
-- **本地测试** (`npm run dev`): 使用 `.dev.vars` 中的凭证和本地 D1 数据库
-- **生产环境** (`npm run deploy`): 使用 `wrangler secret` 设置的凭证和云端 D1 数据库
+- **本地测试** (`npm run dev`): 使用 `.dev.vars` 中的 token 和本地 D1 数据库
+- **生产环境** (`npm run deploy`): 使用 `wrangler secret` 设置的 token 和云端 D1 数据库
 
 ## 下一步
 

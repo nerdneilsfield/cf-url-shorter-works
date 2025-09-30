@@ -8,7 +8,7 @@ This document explains how to configure the URL shortener for your domain and en
 
 The URL shortener requires configuration in two places:
 1. **wrangler.toml** - Cloudflare Workers configuration (routes, bindings, environment variables)
-2. **Wrangler Secrets** - Admin credentials (encrypted storage)
+2. **Wrangler Secrets** - Admin API token (encrypted storage)
 
 ## Quick Configuration
 
@@ -18,9 +18,8 @@ cp wrangler.example.toml wrangler.toml
 
 # 2. Edit wrangler.toml - replace YOUR_DOMAIN and resource IDs
 
-# 3. Set secrets
-wrangler secret put ADMIN_USER
-wrangler secret put ADMIN_PASS
+# 3. Set admin token secret
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
 ```
 
 ## Domain Setup
@@ -123,8 +122,7 @@ wrangler dev --local
 
 Local credentials in `.dev.vars`:
 ```env
-ADMIN_USER=admin
-ADMIN_PASS=local_password
+URL_SHORTER_ADMIN_TOKEN=dev-token-12345
 ```
 
 ## Environment-Specific Configuration
@@ -188,13 +186,11 @@ wrangler deploy --env production
 ### Secrets Per Environment
 
 ```bash
-# Staging secrets
-wrangler secret put ADMIN_USER --env staging
-wrangler secret put ADMIN_PASS --env staging
+# Staging token
+wrangler secret put URL_SHORTER_ADMIN_TOKEN --env staging
 
-# Production secrets
-wrangler secret put ADMIN_USER --env production
-wrangler secret put ADMIN_PASS --env production
+# Production token
+wrangler secret put URL_SHORTER_ADMIN_TOKEN --env production
 ```
 
 ## Cloudflare Dashboard Configuration
@@ -234,18 +230,15 @@ If routes aren't working, manually add them:
 ### Production Secrets (Wrangler Secrets)
 
 ```bash
-# Set secrets (production)
-wrangler secret put ADMIN_USER
-# Enter: your_admin_username
-
-wrangler secret put ADMIN_PASS
-# Enter: your_strong_password
+# Set admin token (production)
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
+# Enter: your_strong_random_token_here
 
 # List secrets
 wrangler secret list
 
 # Delete secret
-wrangler secret delete ADMIN_USER
+wrangler secret delete URL_SHORTER_ADMIN_TOKEN
 ```
 
 ### Local Secrets (.dev.vars)
@@ -254,14 +247,14 @@ For local development only:
 
 ```env
 # .dev.vars (DO NOT COMMIT)
-ADMIN_USER=admin
-ADMIN_PASS=dev_password
+URL_SHORTER_ADMIN_TOKEN=dev-token-12345
 ```
 
 ⚠️ **Important:**
 - `.dev.vars` is in `.gitignore`
 - Only for `wrangler dev --local`
 - Production uses `wrangler secret`
+- Use a strong random token for production
 
 ## Verification Checklist
 
@@ -281,7 +274,7 @@ After configuration, verify each item:
 - [ ] DNS propagation complete: `dig YOUR_DOMAIN`
 
 ### Secrets
-- [ ] Admin credentials set via `wrangler secret`
+- [ ] Admin token set via `wrangler secret put URL_SHORTER_ADMIN_TOKEN`
 - [ ] Local `.dev.vars` configured (optional)
 
 ### Deployment
@@ -291,7 +284,7 @@ After configuration, verify each item:
 
 ### Functionality
 - [ ] Admin UI accessible: `https://YOUR_DOMAIN/admin/`
-- [ ] Can login with credentials
+- [ ] Can enter API token and validate it
 - [ ] Can create links
 - [ ] Redirects work: `curl -I https://YOUR_DOMAIN/test`
 - [ ] Analytics recorded
@@ -357,18 +350,18 @@ After configuration, verify each item:
 ### Issue: 401/403 Authentication Errors
 
 **Symptoms:**
-- Cannot login to admin UI
+- Cannot validate token in admin UI
 - API returns 401 or 403
 
 **Solutions:**
-1. Re-set secrets:
+1. Re-set token secret:
    ```bash
-   wrangler secret put ADMIN_USER
-   wrangler secret put ADMIN_PASS
+   wrangler secret put URL_SHORTER_ADMIN_TOKEN
    ```
-2. For local dev, check `.dev.vars` file
-3. Clear browser cache/cookies
-4. Try different browser/incognito mode
+2. For local dev, check `.dev.vars` file contains correct token
+3. Verify token matches exactly (no extra spaces/newlines)
+4. Clear browser localStorage and re-enter token
+5. Try different browser/incognito mode
 
 ## Security Best Practices
 
@@ -383,8 +376,8 @@ After configuration, verify each item:
 
 ❌ **Never commit:**
 - `wrangler.toml` (contains your domain)
-- `.dev.vars` (contains credentials)
-- `ADMIN_USER` / `ADMIN_PASS` values anywhere in code
+- `.dev.vars` (contains API token)
+- `URL_SHORTER_ADMIN_TOKEN` value anywhere in code
 - `.wrangler/` directory
 
 ### Recommended .gitignore
@@ -406,16 +399,18 @@ node_modules/
 .DS_Store
 ```
 
-### Credential Rotation
+### Token Rotation
 
-**Rotate admin credentials regularly:**
+**Rotate admin token regularly:**
 
 ```bash
-# Update production secrets
-wrangler secret put ADMIN_USER
-wrangler secret put ADMIN_PASS
+# Generate new token (use strong random string)
+# Example: openssl rand -base64 32
 
-# No need to redeploy - secrets update immediately
+# Update production secret
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
+
+# No need to redeploy - secret updates immediately
 ```
 
 ## Advanced Configuration

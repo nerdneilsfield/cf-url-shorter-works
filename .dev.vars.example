@@ -1,6 +1,5 @@
 # Local development environment variables
 # Copy this file to .dev.vars and fill in your values
 
-# Admin credentials (for local testing only)
-ADMIN_USER=admin
-ADMIN_PASS=your_password_here
+# Admin API token (for local testing only)
+URL_SHORTER_ADMIN_TOKEN=your-secret-token-here

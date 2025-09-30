@@ -18,7 +18,7 @@ A fast, edge-compute URL shortener built with Cloudflare Workers, D1 (SQLite), K
 - ⚡ **Fast redirects**: <100ms p99 latency with multi-tier caching
 - 🌍 **Edge compute**: Global deployment on 300+ Cloudflare data centers
 - 📊 **Analytics**: Visit tracking with country and referrer data
-- 🔐 **Secure admin**: HTTP Basic Auth for management operations
+- 🔐 **Secure admin**: Token-based authentication for management operations
 - 📱 **Mobile-friendly UI**: Responsive admin interface (≥320px screens)
 - ⏰ **Auto-cleanup**: Daily cron job removes expired links
 - 🎯 **Custom slugs**: User-defined aliases or auto-generated
@@ -69,9 +69,8 @@ wrangler kv namespace create CACHE_KV
 # Apply database migration
 wrangler d1 migrations apply URL_SHORTENER_DB
 
-# Set production secrets
-wrangler secret put ADMIN_USER
-wrangler secret put ADMIN_PASS
+# Set production secret
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
 
 # Deploy to production
 npm run deploy
@@ -84,15 +83,15 @@ See [SETUP.md](./SETUP.md) for complete step-by-step instructions.
 ### Create Short Link
 
 **Via Admin UI:**
-1. Visit `https://YOUR_DOMAIN/admin/`
-2. Login with your credentials
+1. Visit `https://YOUR_DOMAIN/admin`
+2. Enter your API token
 3. Fill out the "Create Short Link" form
 
 **Via API:**
 
 ```bash
 curl -X POST https://YOUR_DOMAIN/api/admin/links \
-  -u admin:password \
+  -H "Authorization: Bearer YOUR_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "target": "https://example.com/long/url",
@@ -113,7 +112,7 @@ curl -I https://YOUR_DOMAIN/my-link
 
 ### Admin Endpoints
 
-All admin endpoints require HTTP Basic Auth.
+All admin endpoints require Bearer token authentication.
 
 - `POST /api/admin/links` - Create a link
 - `GET /api/admin/links` - List all links
@@ -197,7 +196,7 @@ cp .dev.vars.example .dev.vars
 
 ## Security
 
-- **Authentication**: HTTP Basic Auth for admin endpoints
+- **Authentication**: Bearer token authentication for admin endpoints
 - **Input validation**: URL format, slug pattern, length limits enforced
 - **SQL injection prevention**: Parameterized queries only (prepare/bind pattern)
 - **No PII collection**: Analytics track aggregate data only

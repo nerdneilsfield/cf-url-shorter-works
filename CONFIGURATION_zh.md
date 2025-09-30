@@ -8,7 +8,7 @@
 
 URL 短链接服务需要在两个地方进行配置：
 1. **wrangler.toml** - Cloudflare Workers 配置（路由、绑定、环境变量）
-2. **Wrangler Secrets** - 管理员凭据（加密存储）
+2. **Wrangler Secrets** - 管理员 token（加密存储）
 
 ## 快速配置
 
@@ -281,7 +281,7 @@ ADMIN_PASS=dev_password
 - [ ] DNS 传播完成：`dig YOUR_DOMAIN`
 
 ### 密钥
-- [ ] 通过 `wrangler secret` 设置管理员凭据
+- [ ] 通过 `wrangler secret` 设置管理员 token
 - [ ] 已配置本地 `.dev.vars`（可选）
 
 ### 部署
@@ -290,8 +290,8 @@ ADMIN_PASS=dev_password
 - [ ] 健康检查正常：`curl https://YOUR_DOMAIN/health`
 
 ### 功能
-- [ ] 管理界面可访问：`https://YOUR_DOMAIN/admin/`
-- [ ] 可以使用凭据登录
+- [ ] 管理界面可访问：`https://YOUR_DOMAIN/admin`
+- [ ] 可以使用 token 登录
 - [ ] 可以创建链接
 - [ ] 重定向正常：`curl -I https://YOUR_DOMAIN/test`
 - [ ] 分析已记录
@@ -406,14 +406,13 @@ node_modules/
 .DS_Store
 ```
 
-### 凭据轮换
+### Token 轮换
 
-**定期轮换管理员凭据：**
+**定期轮换管理员 token：**
 
 ```bash
 # 更新生产环境密钥
-wrangler secret put ADMIN_USER
-wrangler secret put ADMIN_PASS
+wrangler secret put URL_SHORTER_ADMIN_TOKEN
 
 # 无需重新部署 - 密钥立即更新
 ```
