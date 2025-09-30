@@ -351,25 +351,40 @@ After configuration, verify each item:
 2. Redeploy: `wrangler deploy`
 3. Check environment-specific vars if using `[env.xxx]`
 
-### Issue: Database/KV Not Found
+### Issue: Database/KV Not Found or Table Missing
 
 **Symptoms:**
 
+- Error: `D1_ERROR: no such table: links: SQLITE_ERROR`
 - Errors about missing database or KV
 - 500 errors on API calls
+- `wrangler d1 migrations apply` says "No migrations to apply" but table doesn't exist
 
 **Solutions:**
 
-1. List resources:
+1. List resources and check remote database:
 
    ```bash
+   # List all databases
    wrangler d1 list
-   wrangler kv namespace list
+
+   # Check tables in REMOTE (production) database
+   wrangler d1 execute URL_SHORTENER_DB --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
    ```
 
-2. Verify IDs in `wrangler.toml` match created resources
-3. Verify bindings (`DB`, `CACHE_KV`, `ANALYTICS`) are correct
-4. Apply migrations: `wrangler d1 migrations apply URL_SHORTENER_DB`
+2. If `links` table is missing, manually apply migration:
+
+   ```bash
+   # Execute migration on remote database
+   wrangler d1 execute URL_SHORTENER_DB --remote --file=migrations/0001_create_links.sql
+   ```
+
+3. Verify IDs in `wrangler.toml` match created resources
+4. Verify bindings (`DB`, `CACHE_KV`, `ANALYTICS`) are correct
+
+**Important:**
+- Without `--remote` flag, commands only operate on local database
+- Production database requires `--remote` flag
 
 ### Issue: 401/403 Authentication Errors
 

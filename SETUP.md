@@ -295,17 +295,30 @@ Location: https://your-target-url.com
 - Verify route pattern in `wrangler.toml` includes `/*`
 - Wait 1-2 minutes for route propagation
 
-### Issue: "Database not found"
+### Issue: "Database not found" or "no such table: links"
+
+**Symptoms:**
+- Error: `D1_ERROR: no such table: links: SQLITE_ERROR`
+- API returns 500 errors
+- Migration says "No migrations to apply" but table doesn't exist
 
 **Solution:**
 
 ```bash
-# List your databases
-wrangler d1 list
+# 1. Check if tables exist in REMOTE (production) database
+wrangler d1 execute URL_SHORTENER_DB --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
 
-# Verify migration was applied
-wrangler d1 migrations list URL_SHORTENER_DB
+# 2. If 'links' table is missing, manually apply migration to remote database
+wrangler d1 execute URL_SHORTENER_DB --remote --file=migrations/0001_create_links.sql
+
+# 3. Verify the table was created
+wrangler d1 execute URL_SHORTENER_DB --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
 ```
+
+**Important:**
+- Without `--remote` flag, commands execute on LOCAL database only
+- Production database requires `--remote` flag
+- `wrangler d1 migrations apply` may show "No migrations to apply" if metadata exists, but actual tables might be missing
 
 ### Issue: "401 Unauthorized" in production
 

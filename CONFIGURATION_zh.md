@@ -358,25 +358,40 @@ ADMIN_PASS=dev_password
 2. 重新部署：`wrangler deploy`
 3. 如果使用 `[env.xxx]`，检查环境特定变量
 
-### 问题：数据库/KV 未找到
+### 问题：数据库/KV 未找到或表不存在
 
 **症状：**
 
+- 错误：`D1_ERROR: no such table: links: SQLITE_ERROR`
 - 关于缺少数据库或 KV 的错误
 - API 调用时出现 500 错误
+- `wrangler d1 migrations apply` 显示"无需迁移"但表不存在
 
 **解决方案：**
 
-1. 列出资源：
+1. 列出资源并检查远程数据库：
 
    ```bash
+   # 列出所有数据库
    wrangler d1 list
-   wrangler kv namespace list
+
+   # 检查远程（生产）数据库中的表
+   wrangler d1 execute URL_SHORTENER_DB --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
    ```
 
-2. 验证 `wrangler.toml` 中的 ID 与创建的资源匹配
-3. 验证绑定（`DB`、`CACHE_KV`、`ANALYTICS`）正确
-4. 应用迁移：`wrangler d1 migrations apply URL_SHORTENER_DB`
+2. 如果 `links` 表不存在，手动执行迁移：
+
+   ```bash
+   # 对远程数据库执行迁移
+   wrangler d1 execute URL_SHORTENER_DB --remote --file=migrations/0001_create_links.sql
+   ```
+
+3. 验证 `wrangler.toml` 中的 ID 与创建的资源匹配
+4. 验证绑定（`DB`、`CACHE_KV`、`ANALYTICS`）正确
+
+**重要提示：**
+- 不加 `--remote` 参数只会操作本地数据库
+- 生产环境必须使用 `--remote` 参数
 
 ### 问题：401/403 认证错误
 

@@ -154,6 +154,26 @@ A:
 - **本地测试** (`npm run dev`): 使用 `.dev.vars` 中的 token 和本地 D1 数据库
 - **生产环境** (`npm run deploy`): 使用 `wrangler secret` 设置的 token 和云端 D1 数据库
 
+### Q: 部署后出现 "no such table: links" 错误怎么办？
+
+A: 这说明生产数据库中没有表。按以下步骤排查：
+
+```bash
+# 1. 检查远程（生产）数据库中是否有表
+wrangler d1 execute URL_SHORTENER_DB --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
+
+# 2. 如果没有 'links' 表，手动执行迁移
+wrangler d1 execute URL_SHORTENER_DB --remote --file=migrations/0001_create_links.sql
+
+# 3. 验证表已创建
+wrangler d1 execute URL_SHORTENER_DB --remote --command "SELECT name FROM sqlite_master WHERE type='table';"
+```
+
+**重要提示：**
+- 不加 `--remote` 参数时，命令只会操作本地数据库
+- 生产数据库必须加 `--remote` 参数
+- `wrangler d1 migrations apply` 可能显示"无需迁移"，但实际表可能不存在
+
 ## 下一步
 
 - 阅读 [README.md](./README.md) 了解使用方法
