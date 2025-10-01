@@ -14,6 +14,10 @@
 - [English Setup Guide](./SETUP.md)
 - [中文设置指南](./SETUP_zh.md)
 
+## 界面截图
+
+![管理后台](./images/UI.png)
+
 ## 特性
 
 - ⚡ **快速重定向**: 缓存命中时 p99 延迟 <100ms

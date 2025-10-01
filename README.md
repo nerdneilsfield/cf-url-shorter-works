@@ -14,6 +14,10 @@ A fast, edge-compute URL shortener built with Cloudflare Workers, D1 (SQLite), K
 - [English Setup Guide](./SETUP.md)
 - [中文设置指南](./SETUP_zh.md)
 
+## Screenshot
+
+![Admin Dashboard](./images/UI.png)
+
 ## Features
 
 - ⚡ **Fast redirects**: <100ms p99 latency with multi-tier caching
