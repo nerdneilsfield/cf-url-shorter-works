@@ -1,0 +1,5 @@
+# Local development environment variables
+# Copy this file to .dev.vars and fill in your values
+
+# Admin API token (for local testing only)
+URL_SHORTER_ADMIN_TOKEN=your-secret-token-here

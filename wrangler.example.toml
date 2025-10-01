@@ -1,0 +1,35 @@
+name = "url-shortener"
+main = "worker/src/index.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# User-configurable domain (replace YOUR_DOMAIN with your actual domain)
+# Example: { pattern = "short.example.com/*", zone_name = "example.com" }
+routes = [
+  { pattern = "YOUR_DOMAIN/*", zone_name = "YOUR_DOMAIN" }
+]
+
+
+
+# Environment variables
+[vars]
+DOMAIN = "YOUR_DOMAIN"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "URL_SHORTENER_DB"
+database_id = "YOUR_D1_DATABASE_ID"  # Get from: wrangler d1 create URL_SHORTENER_DB
+
+# KV Namespace binding
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "YOUR_KV_NAMESPACE_ID"  # Get from: wrangler kv namespace create CACHE_KV
+
+# Workers Analytics Engine binding
+[[analytics_engine_datasets]]
+binding = "ANALYTICS"
+
+# Cron trigger for daily cleanup (2 AM UTC)
+[triggers]
+crons = ["0 2 * * *"]
